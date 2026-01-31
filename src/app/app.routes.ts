@@ -1,0 +1,25 @@
+import { Routes } from '@angular/router';
+import { AuthGuard } from './core/guards/auth.guard';
+import { NoAuthGuard } from './core/guards/no-auth.guard';
+
+export const routes: Routes = [
+  {
+    path: 'login',
+    canActivate: [NoAuthGuard],
+    loadChildren: () =>
+      import('./features/auth/auth.routes')
+        .then(m => m.AUTH_ROUTES)
+  },
+  {
+    path: 'dashboard',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/dashboard/base.routes')
+        .then(m => m.DASHBOARD_ROUTES)
+  },
+  {
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full'
+  }
+];
