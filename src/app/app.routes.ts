@@ -7,7 +7,14 @@ export const routes: Routes = [
     path: 'login',
     canActivate: [NoAuthGuard],
     loadChildren: () =>
-      import('./features/auth/auth.routes')
+      import('./features/auth/login/auth.routes')
+        .then(m => m.AUTH_ROUTES)
+  },
+  {
+    path: 'register',
+    canActivate: [NoAuthGuard],
+    loadChildren: () =>
+      import('./features/auth/register-user/register.routes')
         .then(m => m.AUTH_ROUTES)
   },
   {

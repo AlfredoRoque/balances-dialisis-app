@@ -31,4 +31,8 @@ export class LoginComponent {
       this.router.navigate(['/dashboard']);
     });
   }
+
+  register() {
+    this.router.navigate(['/register']);
+  }
 }

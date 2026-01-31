@@ -12,7 +12,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const snackBar = inject(MatSnackBar);
 
   // 🔹 No interceptar endpoints públicos
-  if (req.url.includes('/auth/login')) {
+  if (req.url.includes('/auth/login')|| req.url.includes('/user/save')) {
     return next(req);
   }
 
