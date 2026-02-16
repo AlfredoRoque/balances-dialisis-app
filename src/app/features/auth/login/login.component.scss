@@ -1,0 +1,90 @@
+@use 'sass:color';
+
+:host {
+	display: block;
+	min-height: 100vh;
+	background: radial-gradient(circle at 10% 20%, rgba(33, 150, 243, 0.18), transparent 45%),
+							radial-gradient(circle at 80% 0, rgba(0, 150, 136, 0.18), transparent 40%),
+							#0f172a;
+	color: #e2e8f0;
+	padding: 1.5rem;
+}
+
+.login-shell {
+	max-width: 420px;
+	margin: 0 auto;
+}
+
+.login-card {
+	padding: 2.5rem;
+	border-radius: 1.25rem;
+	box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
+	background: rgba(15, 23, 42, 0.82);
+	backdrop-filter: blur(20px);
+}
+
+header {
+	margin-bottom: 2rem;
+
+	.eyebrow {
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		font-size: 0.75rem;
+		color: rgba(226, 232, 240, 0.6);
+		margin-bottom: 0.4rem;
+	}
+
+	h1 {
+		font-size: 1.8rem;
+		margin: 0;
+	}
+
+	.subtitle {
+		color: rgba(226, 232, 240, 0.7);
+		margin: 0.25rem 0 0;
+		font-size: 0.95rem;
+	}
+}
+
+form {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.mat-mdc-form-field {
+	width: 100%;
+}
+
+.actions {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin-top: 0.5rem;
+
+	button {
+		height: 48px;
+		border-radius: 999px;
+		font-size: 0.95rem;
+		text-transform: none;
+		font-weight: 600;
+	}
+}
+
+.recover-link {
+	margin-top: 0.25rem;
+	width: 100%;
+	justify-content: center;
+	color: rgba(226, 232, 240, 0.85);
+	font-weight: 500;
+	text-transform: none;
+}
+
+@media (min-width: 640px) {
+	.actions {
+		flex-direction: row;
+		button {
+			flex: 1;
+		}
+	}
+}

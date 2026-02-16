@@ -2,14 +2,14 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../service/AuthService';
+import { SnackbarService } from '../service/component/snackbar.service';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
 
   const authService = inject(AuthService);
   const router = inject(Router);
-  const snackBar = inject(MatSnackBar);
+  const snackBar = inject(SnackbarService);
 
   // 🔹 No interceptar endpoints públicos
   if (req.url.includes('/auth/login')|| req.url.includes('/user/save')) {
@@ -36,11 +36,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
         authService.logout();
 
         if (authService.canNotifySessionExpired()) {
-          snackBar.open(
-            'Tu sesión ha expirado',
-            'Cerrar',
-            { duration: 4000 }
-          );
+          snackBar.openInfo('Tu sesión ha expirado');
         }
 
         router.navigate(['/login']);

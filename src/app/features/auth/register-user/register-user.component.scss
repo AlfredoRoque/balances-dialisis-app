@@ -1,0 +1,81 @@
+:host {
+	display: block;
+	min-height: 100vh;
+	background: radial-gradient(circle at 15% 15%, rgba(79, 70, 229, 0.18), transparent 45%),
+							radial-gradient(circle at 75% 5%, rgba(236, 72, 153, 0.18), transparent 40%),
+							#0b1120;
+	color: #e2e8f0;
+	padding: 1.5rem;
+}
+
+.register-shell {
+	max-width: 460px;
+	margin: 0 auto;
+}
+
+.register-card {
+	padding: 2.75rem;
+	border-radius: 1.5rem;
+	box-shadow: 0 25px 60px rgba(2, 6, 23, 0.45);
+	background: rgba(8, 11, 20, 0.85);
+	backdrop-filter: blur(22px);
+}
+
+header {
+	margin-bottom: 2rem;
+
+	.eyebrow {
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		font-size: 0.75rem;
+		color: rgba(226, 232, 240, 0.6);
+		margin-bottom: 0.4rem;
+	}
+
+	h1 {
+		font-size: 1.85rem;
+		margin: 0;
+	}
+
+	.subtitle {
+		color: rgba(226, 232, 240, 0.7);
+		margin: 0.25rem 0 0;
+		font-size: 0.95rem;
+	}
+}
+
+form {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.mat-mdc-form-field {
+	width: 100%;
+}
+
+.actions {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin-top: 0.5rem;
+
+	button {
+		height: 48px;
+		border-radius: 999px;
+		font-size: 0.95rem;
+		text-transform: none;
+		font-weight: 600;
+	}
+}
+
+@media (min-width: 640px) {
+	.actions {
+		flex-direction: row;
+
+		button {
+			flex: 1;
+		}
+	}
+}
+

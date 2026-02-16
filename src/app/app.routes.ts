@@ -18,6 +18,13 @@ export const routes: Routes = [
         .then(m => m.AUTH_ROUTES)
   },
   {
+    path: 'recover-password',
+    canActivate: [NoAuthGuard],
+    loadChildren: () =>
+      import('./features/auth/recover-password/recover.routes')
+        .then(m => m.RECOVER_ROUTES)
+  },
+  {
     path: 'dashboard',
     canActivate: [AuthGuard],
     loadChildren: () =>

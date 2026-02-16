@@ -6,13 +6,25 @@ import { SessionTimerService } from "./session-timer.service";
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private API = 'http://localhost:8080/auth';
+  private API = 'http://localhost:8082/api/auth';
   private sessionExpiredNotified = false;
 
   constructor(private http: HttpClient,private router: Router,private sessionTimer: SessionTimerService) {}
 
   login(data: { username: string; password: string }) {
     return this.http.post<any>(`${this.API}/login`, data);
+  }
+
+  validateMail(email: string) {
+    return this.http.get<any>(`${this.API}/validate/mail`, {
+      params: { email }
+    });
+  }
+
+  recoverPassword(email: string) {
+    return this.http.get<any>(`${this.API}/recover/password`, {
+      params: { email }
+    });
   }
 
   getToken() {

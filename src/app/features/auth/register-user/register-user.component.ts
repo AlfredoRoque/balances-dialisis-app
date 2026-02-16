@@ -1,14 +1,27 @@
 import { Component } from "@angular/core";
 import { Router } from "@angular/router";
-import { UserService } from "../../dashboard/services/userService";
+import { UserService } from "../../../core/service/userService";
+import { SnackbarService } from "../../../core/service/component/snackbar.service";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-register-user',
   standalone: true,
-  imports: [ReactiveFormsModule],
-  templateUrl: './register-user.component.html'
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule
+  ],
+  templateUrl: './register-user.component.html',
+  styleUrls: ['./register-user.component.scss']
 })
 export class RegisterUserComponent {
 
@@ -17,20 +30,30 @@ export class RegisterUserComponent {
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private snackBar: SnackbarService
   ) {
     this.form = this.fb.group({
       username: ['', Validators.required],
       password: ['', Validators.required],
-      address: ['', Validators.required]
+      email: ['', [Validators.required, Validators.email]]
     });
   }
 
   register() {
-    console.log(this.form.value);
-    this.userService.guardar(this.form.value).subscribe(res => {
-      console.log('User registered successfully', res);
-      this.router.navigate(['/login']);
+    this.userService.guardar(this.form.value).subscribe({
+      next: () => {
+        this.router.navigate(['/login']);
+        this.snackBar.openSuccess('Usuario registrado exitosamente');
+      },
+      error: (error) => {
+        const message = error?.error?.message || 'Error desconocido al registrar usuario';
+        this.snackBar.openError(message);
+      }
     });
+  }
+
+  goToLogin() {
+    this.router.navigate(['/login']);
   }
 }

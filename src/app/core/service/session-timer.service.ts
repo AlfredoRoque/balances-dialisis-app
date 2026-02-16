@@ -1,6 +1,5 @@
-import { AuthService } from "./AuthService";
 import { Injectable } from "@angular/core";
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { SnackbarService } from "./component/snackbar.service";
 
 @Injectable({ providedIn: 'root' })
 export class SessionTimerService {
@@ -8,7 +7,7 @@ export class SessionTimerService {
   private warningTimeout?: any;
   private logoutTimeout?: any;
 
-  constructor(private snackBar: MatSnackBar) {}
+  constructor(private snackBar: SnackbarService) {}
 
   start(expirationTimeMs: number, onExpire: () => void) {
     this.stop();
@@ -21,11 +20,7 @@ export class SessionTimerService {
     const warningTime = expiresInMs - 60_000;
     if (warningTime > 0) {
       this.warningTimeout = setTimeout(() => {
-        this.snackBar.open(
-          'Tu sesión está por expirar',
-          'Aceptar',
-          { duration: 5000 }
-        );
+        this.snackBar.openInfo('Tu sesión está por expirar');
       }, warningTime);
     }
 

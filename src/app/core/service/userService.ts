@@ -4,7 +4,7 @@ import { Injectable } from "@angular/core";
 @Injectable({ providedIn: 'root' })
 export class UserService {
 
-  private API = 'http://localhost:8080/user';
+  private API = 'http://localhost:8082/api/users';
 
   constructor(private http: HttpClient) {}
 
