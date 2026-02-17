@@ -28,7 +28,7 @@ export const routes: Routes = [
     path: 'dashboard',
     canActivate: [AuthGuard],
     loadChildren: () =>
-      import('./features/dashboard/base.routes')
+      import('./features/dashboard/dashboard.routes')
         .then(m => m.DASHBOARD_ROUTES)
   },
   {
