@@ -17,6 +17,7 @@ import { PatientResponse } from "../../../shared/models/patients/patientResponse
 import { PatientRequest } from "../../../shared/models/patients/patientRequest";
 import { BagType } from "../../../shared/models/BagType";
 import { BagTypeService } from "../../../core/service/bagTypeService";
+import { VitalSignFormComponent } from "../vital-sign-form/vital-sign-form.component";
 
 @Component({
   selector: 'app-dashboard',
@@ -31,7 +32,8 @@ import { BagTypeService } from "../../../core/service/bagTypeService";
     MatInputModule,
     MatFormFieldModule,
     MatSelectModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    VitalSignFormComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']

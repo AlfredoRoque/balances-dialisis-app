@@ -115,30 +115,29 @@
 
     <section class="card-footer">
       <div class="footer-info">
-        <h3>Agregar paciente</h3>
-        <p>Registra nuevas personas cuando se incorporen a tu unidad.</p>
+        <h3>Agregar nuevo paciente</h3>
       </div>
 
       <form class="new-patient-form" [formGroup]="newPatientForm" (ngSubmit)="addPatient()">
         <mat-form-field appearance="outline">
-          <mat-label>Nombre completo</mat-label>
-          <input matInput formControlName="name" placeholder="Ej. Ana Pérez">
+          <mat-label class="input-label">Nombre completo</mat-label>
+          <input matInput formControlName="name" placeholder="Ej. Ana Pérez" class="input-content">
           <mat-error *ngIf="newPatientForm.get('name')?.invalid && newPatientForm.get('name')?.touched">
             Ingresa un nombre válido.
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Edad</mat-label>
-          <input matInput type="number" formControlName="age" min="0" max="120">
+          <mat-label class="input-label">Edad</mat-label>
+          <input matInput type="number" formControlName="age" placeholder="Ej. 30" min="0" max="120" class="input-content">
           <mat-error *ngIf="newPatientForm.get('age')?.invalid && newPatientForm.get('age')?.touched">
             Ingresa una edad válida.
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Tipo de bolsa</mat-label>
-          <mat-select formControlName="bagTypeId" [disabled]="bagTypesLoading || !bagTypes.length">
+          <mat-label class="input-label">Tipo de bolsa</mat-label>
+          <mat-select formControlName="bagTypeId" [disabled]="bagTypesLoading || !bagTypes.length" class="input-content">
             <mat-option *ngFor="let bag of bagTypes" [value]="bag.id">
               {{ bag.type }} {{ bag.description ? '- ' + bag.description : '' }}
             </mat-option>
@@ -149,9 +148,14 @@
         </mat-form-field>
 
         <button mat-flat-button color="primary" type="submit" [disabled]="newPatientForm.invalid || creatingPatient">
-          {{ creatingPatient ? 'Guardando...' : 'Registrar paciente' }}
+          <mat-icon>add</mat-icon>
+          <span class="material-icons-outlined">
+            {{ creatingPatient ? 'Guardando...' : 'Registrar paciente' }}
+          </span>
         </button>
       </form>
     </section>
   </mat-card>
+
+  <app-vital-sign-form></app-vital-sign-form>
 </section>

@@ -190,6 +190,7 @@ mat-paginator {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  
 
   .footer-info {
     h3 {
@@ -202,7 +203,7 @@ mat-paginator {
     }
   }
 
-  .new-patient-form {
+  .new-patient-form{
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -214,16 +215,23 @@ mat-paginator {
     button {
       justify-self: flex-start;
     }
+
+    .input-label{
+      color: white;
+      opacity: 0.55;
+    }
+
+    .input-content{
+      color: white;
+    }
   }
 }
 
 @media (min-width: 720px) {
   .card-footer {
-    flex-direction: row;
-    align-items: center;
     justify-content: space-between;
 
-    .new-patient-form {
+    .new-patient-form{
       grid-template-columns: repeat(3, minmax(0, 1fr));
       align-items: end;
 
