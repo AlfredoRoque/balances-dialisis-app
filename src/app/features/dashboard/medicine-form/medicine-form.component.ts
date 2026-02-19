@@ -9,12 +9,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { finalize } from 'rxjs/operators';
-import { VitalSignService } from '../../../core/service/VitalSignService';
-import { VitalSign } from '../../../shared/models/VitalSign';
+import { MedicineService } from '../../../core/service/MedicineService';
+import { Medicine } from '../../../shared/models/Medicine';
 import { SnackbarService } from '../../../core/service/component/snackbar.service';
 
 @Component({
-  selector: 'app-vital-sign-form',
+  selector: 'app-medicine-form',
   standalone: true,
   imports: [
     CommonModule,
@@ -27,11 +27,11 @@ import { SnackbarService } from '../../../core/service/component/snackbar.servic
     MatTableModule,
     MatPaginatorModule
   ],
-  templateUrl: './vital-sign-form.component.html',
-  styleUrls: ['./vital-sign-form.component.scss']
+  templateUrl: './medicine-form.component.html',
+  styleUrls: ['./medicine-form.component.scss']
 })
-export class VitalSignFormComponent implements OnInit, AfterViewInit {
-  @Output() created = new EventEmitter<VitalSign>();
+export class MedicineFormComponent implements OnInit, AfterViewInit {
+  @Output() created = new EventEmitter<Medicine>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -41,15 +41,15 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
   loading = false;
 
   displayedColumns = ['name', 'actions'];
-  vitalSigns: VitalSign[] = [];
-  dataSource = new MatTableDataSource<VitalSign>([]);
+  medicines: Medicine[] = [];
+  dataSource = new MatTableDataSource<Medicine>([]);
   rowForms: Record<string, FormGroup> = {};
   editingId: number | null = null;
   savingId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private vitalSignService: VitalSignService,
+    private medicineService: MedicineService,
     private snackBar: SnackbarService
   ) {
     this.form = this.fb.group({
@@ -58,7 +58,7 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.loadVitalSigns();
+    this.loadMedicines();
   }
 
   ngAfterViewInit(): void {
@@ -80,47 +80,47 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
     this.creating = true;
     this.submitError = null;
 
-    const payload: VitalSign = { name: trimmedName };
+    const payload: Medicine = { name: trimmedName };
 
-    this.vitalSignService.createVitalSign(payload)
+    this.medicineService.createMedicine(payload)
       .pipe(finalize(() => this.creating = false))
       .subscribe({
-        next: (createdVitalSign) => {
-          this.prependVitalSign(createdVitalSign);
-          this.created.emit(createdVitalSign);
+        next: (createdMedicine) => {
+          this.prependMedicine(createdMedicine);
+          this.created.emit(createdMedicine);
           this.form.reset({ name: '' });
-          this.snackBar.openSuccess('Signo vital registrado exitosamente');
+          this.snackBar.openSuccess('Medicina registrada exitosamente');
         },
-        error: () => {
-          this.submitError = 'No fue posible registrar el signo vital. Intenta nuevamente.';
-          this.snackBar.openError('No fue posible registrar el signo vital. Intenta nuevamente.');
+            error: () => {
+            this.submitError = 'No fue posible registrar la medicina. Intenta nuevamente.';
+            this.snackBar.openError('No fue posible registrar la medicina. Intenta nuevamente.');
         }
       });
   }
 
-  startEdit(vitalSign: VitalSign): void {
-    const id = vitalSign.id;
+  startEdit(medicine: Medicine): void {
+    const id = medicine.id;
     if (id == null) {
       return;
     }
-    this.ensureRowForm(vitalSign);
+    this.ensureRowForm(medicine);
     this.editingId = id;
   }
 
-  cancelEdit(vitalSign: VitalSign): void {
-    const id = vitalSign.id;
+  cancelEdit(medicine: Medicine): void {
+    const id = medicine.id;
     if (id == null) {
       return;
     }
     const form = this.rowForms[id.toString()];
     if (form) {
-      form.patchValue({ name: vitalSign.name });
+      form.patchValue({ name: medicine.name });
     }
     this.editingId = null;
   }
 
-  save(vitalSign: VitalSign): void {
-    const id = vitalSign.id;
+  save(medicine: Medicine): void {
+    const id = medicine.id;
     if (id == null) {
       return;
     }
@@ -138,34 +138,34 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
     }
 
     this.savingId = id;
-    this.vitalSignService.updateVitalSign(id, { id, name: trimmedName })
+    this.medicineService.updateMedicine(id, { id, name: trimmedName })
       .pipe(finalize(() => this.savingId = null))
       .subscribe({
         next: (updated) => {
-          this.applyVitalSignUpdate(updated ?? { ...vitalSign, name: trimmedName });
+          this.applyMedicineUpdate(updated ?? { ...medicine, name: trimmedName });
           this.editingId = null;
-          this.snackBar.openSuccess('Signo vital actualizado exitosamente');
+          this.snackBar.openSuccess('Medicina actualizada exitosamente');
         },
         error: () => {
-          form.patchValue({ name: vitalSign.name });
-          this.snackBar.openError('No fue posible actualizar el signo vital. Intenta nuevamente.');
+          form.patchValue({ name: medicine.name });
+          this.snackBar.openError('No fue posible actualizar la medicina. Intenta nuevamente.');
         }
       });
   }
 
-  delete(vitalSign: VitalSign): void {
-    const id = vitalSign.id;
+  delete(medicine: Medicine): void {
+    const id = medicine.id;
     if (id == null) {
       return;
     }
 
-    this.vitalSignService.deleteVitalSign(id).subscribe({
+    this.medicineService.deleteMedicine(id).subscribe({
       next: () => {
-        this.removeVitalSignFromTable(id);
-        this.snackBar.openSuccess('Signo vital eliminado exitosamente');
+        this.removeMedicineFromTable(id);
+        this.snackBar.openSuccess('Medicina eliminada exitosamente');
       },
       error: () => {
-        this.snackBar.openError('No fue posible eliminar el signo vital. Intenta nuevamente.');
+        this.snackBar.openError('No fue posible eliminar la medicina. Intenta nuevamente.');
       }
     });
   }
@@ -184,25 +184,25 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
     return this.rowForms[id.toString()] ?? null;
   }
 
-  private loadVitalSigns(): void {
+  private loadMedicines(): void {
     this.loading = true;
-    this.vitalSignService.getVitalSigns()
+    this.medicineService.getMedicines()
       .pipe(finalize(() => this.loading = false))
       .subscribe({
-        next: (signs) => {
-          this.vitalSigns = signs ?? [];
+        next: (medicines) => {
+          this.medicines = medicines ?? [];
           this.refreshTable(true);
         },
         error: () => {
-          this.vitalSigns = [];
+          this.medicines = [];
           this.refreshTable(true);
         }
       });
   }
 
   private refreshTable(resetPage = false): void {
-    this.syncRowForms(this.vitalSigns);
-    this.dataSource.data = [...this.vitalSigns];
+    this.syncRowForms(this.medicines);
+    this.dataSource.data = [...this.medicines];
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
       if (resetPage) {
@@ -211,47 +211,47 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private syncRowForms(signs: VitalSign[]): void {
+  private syncRowForms(medicines: Medicine[]): void {
     const existingIds = new Set(Object.keys(this.rowForms));
-    signs.forEach(sign => {
-      if (sign.id == null) {
+    medicines.forEach(medicine => {
+      if (medicine.id == null) {
         return;
       }
-      existingIds.delete(sign.id.toString());
-      this.ensureRowForm(sign);
+      existingIds.delete(medicine.id.toString());
+      this.ensureRowForm(medicine);
     });
     existingIds.forEach(id => delete this.rowForms[id]);
   }
 
-  private ensureRowForm(sign: VitalSign): void {
-    const id = sign.id;
+  private ensureRowForm(medicine: Medicine): void {
+    const id = medicine.id;
     if (id == null) {
       return;
     }
     const key = id.toString();
     const existing = this.rowForms[key];
     if (existing) {
-      existing.setValue({ name: sign.name }, { emitEvent: false });
+      existing.setValue({ name: medicine.name }, { emitEvent: false });
       return;
     }
     this.rowForms[key] = this.fb.group({
-      name: [sign.name, [Validators.required, Validators.maxLength(80)]]
+      name: [medicine.name, [Validators.required, Validators.maxLength(80)]]
     });
   }
 
-  private applyVitalSignUpdate(updated: VitalSign): void {
+  private applyMedicineUpdate(updated: Medicine): void {
     if (updated.id == null) {
       return;
     }
-    const index = this.vitalSigns.findIndex(sign => sign.id === updated.id);
+    const index = this.medicines.findIndex(item => item.id === updated.id);
     if (index !== -1) {
-      this.vitalSigns[index] = { ...this.vitalSigns[index], ...updated };
+      this.medicines[index] = { ...this.medicines[index], ...updated };
       this.refreshTable();
     }
   }
 
-  private removeVitalSignFromTable(id: number): void {
-    this.vitalSigns = this.vitalSigns.filter(sign => sign.id !== id);
+  private removeMedicineFromTable(id: number): void {
+    this.medicines = this.medicines.filter(item => item.id !== id);
     delete this.rowForms[id.toString()];
     if (this.editingId === id) {
       this.editingId = null;
@@ -262,8 +262,8 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
     this.refreshTable(true);
   }
 
-  private prependVitalSign(sign: VitalSign): void {
-    this.vitalSigns = [sign, ...this.vitalSigns];
+  private prependMedicine(medicine: Medicine): void {
+    this.medicines = [medicine, ...this.medicines];
     this.refreshTable(true);
   }
 }

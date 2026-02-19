@@ -18,6 +18,8 @@ import { PatientRequest } from "../../../shared/models/patients/patientRequest";
 import { BagType } from "../../../shared/models/BagType";
 import { BagTypeService } from "../../../core/service/bagTypeService";
 import { VitalSignFormComponent } from "../vital-sign-form/vital-sign-form.component";
+import { MedicineFormComponent } from "../medicine-form/medicine-form.component";
+import { SnackbarService } from "../../../core/service/component/snackbar.service";
 
 @Component({
   selector: 'app-dashboard',
@@ -33,7 +35,8 @@ import { VitalSignFormComponent } from "../vital-sign-form/vital-sign-form.compo
     MatFormFieldModule,
     MatSelectModule,
     ReactiveFormsModule,
-    VitalSignFormComponent
+    VitalSignFormComponent,
+    MedicineFormComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -61,7 +64,8 @@ export class DashboardComponent implements AfterViewInit {
     private utility: Utility,
     private patientService: PatientService,
     private bagTypeService: BagTypeService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private snackBar: SnackbarService
   ) {
     this.newPatientForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(80)]],
@@ -143,6 +147,7 @@ export class DashboardComponent implements AfterViewInit {
             || { id: normalizedBagTypeId, type: 'Sin asignar', description: '' };
           this.applyPatientUpdate(updated ?? { ...patient, name, age, bagType: resolvedBagType });
           this.editingPatientId = null;
+          this.snackBar.openSuccess('Paciente actualizado exitosamente');
         },
         error: () => {
           form.patchValue({
@@ -150,13 +155,20 @@ export class DashboardComponent implements AfterViewInit {
             age: patient.age,
             bagTypeId: patient.bagType?.id ?? null
           });
+          this.snackBar.openError('No fue posible actualizar el paciente. Por favor, inténtalo de nuevo.');
         }
       });
   }
 
   deletePatient(patient: PatientResponse): void {
     this.patientService.deletePatient(patient.id).subscribe({
-      next: () => this.removePatientFromTable(patient)
+      next: () => {
+        this.removePatientFromTable(patient);
+        this.snackBar.openSuccess('Paciente eliminado exitosamente');
+      },
+      error: () => {
+        this.snackBar.openError('No fue posible eliminar el paciente. Por favor, inténtalo de nuevo.');
+      }
     });
   }
 
@@ -273,9 +285,11 @@ export class DashboardComponent implements AfterViewInit {
             age: null,
             bagTypeId: this.bagTypes[0]?.id ?? null
           });
+          this.snackBar.openSuccess('Paciente creado exitosamente');
         },
         error: (error) => {
           console.error('Error al crear paciente:', error);
+          this.snackBar.openError('No fue posible crear el paciente. Por favor, inténtalo de nuevo.');
         }
       });
   }
