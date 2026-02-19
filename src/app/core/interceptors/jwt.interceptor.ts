@@ -12,7 +12,8 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const snackBar = inject(SnackbarService);
 
   // 🔹 No interceptar endpoints públicos
-  if (req.url.includes('/auth/login')|| req.url.includes('/user/save')) {
+  if (req.url.includes('/auth/login')|| req.url.includes('/user/save')
+    || req.url.includes('/auth/validate/mail')|| req.url.includes('/auth/recover/password')) {
     return next(req);
   }
 
