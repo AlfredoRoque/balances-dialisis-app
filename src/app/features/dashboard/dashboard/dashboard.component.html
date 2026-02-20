@@ -34,7 +34,10 @@
             </ng-container>
             <ng-template #patientView>
               <div class="cell-main">
-                <span class="name">{{ patient.name }}</span>
+                <button type="button" class="name-button" (click)="viewPatientDetail(patient)" aria-label="Ver detalle del paciente">
+                  <span class="name">{{ patient.name }}</span>
+                  <mat-icon>trending_flat</mat-icon>
+                </button>
               </div>
             </ng-template>
           </td>

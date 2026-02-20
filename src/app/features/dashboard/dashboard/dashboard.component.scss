@@ -142,6 +142,32 @@
       font-size: 0.85rem;
       color: black;
     }
+
+    .name-button {
+      border: none;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      color: black;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.2s ease;
+
+      mat-icon {
+        font-size: 1.1rem;
+        width: 1.1rem;
+        height: 1.1rem;
+      }
+
+      &:hover,
+      &:focus-visible {
+        color: #0c4a6e;
+      }
+    }
   }
 
   .actions-header,

@@ -11,8 +11,8 @@ export class AuthService {
 
   constructor(private http: HttpClient,private router: Router,private sessionTimer: SessionTimerService) {}
 
-  login(data: { username: string; password: string }) {
-    return this.http.post<any>(`${this.API}/login`, data);
+  login(data: { username: string; password: string },timeZone: string) {
+    return this.http.post<any>(`${this.API}/login`, { ...data, timeZone });
   }
 
   validateMail(email: string) {

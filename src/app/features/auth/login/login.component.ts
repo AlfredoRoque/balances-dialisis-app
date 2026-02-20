@@ -40,7 +40,8 @@ export class LoginComponent {
   }
 
   login() {
-    this.authService.login(this.form.value).subscribe({
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    this.authService.login(this.form.value, timeZone).subscribe({
       next: (res) => {
         this.authService.handleLogin(res.token);
         this.router.navigate(['/dashboard']);

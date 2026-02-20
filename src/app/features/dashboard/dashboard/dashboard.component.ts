@@ -20,6 +20,7 @@ import { BagTypeService } from "../../../core/service/bagTypeService";
 import { VitalSignFormComponent } from "../vital-sign-form/vital-sign-form.component";
 import { MedicineFormComponent } from "../medicine-form/medicine-form.component";
 import { SnackbarService } from "../../../core/service/component/snackbar.service";
+import { Router } from "@angular/router";
 
 @Component({
   selector: 'app-dashboard',
@@ -65,7 +66,8 @@ export class DashboardComponent implements AfterViewInit {
     private patientService: PatientService,
     private bagTypeService: BagTypeService,
     private fb: FormBuilder,
-    private snackBar: SnackbarService
+    private snackBar: SnackbarService,
+    private router: Router
   ) {
     this.newPatientForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(80)]],
@@ -169,6 +171,19 @@ export class DashboardComponent implements AfterViewInit {
       error: () => {
         this.snackBar.openError('No fue posible eliminar el paciente. Por favor, inténtalo de nuevo.');
       }
+    });
+  }
+
+  viewPatientDetail(patient: PatientResponse): void {
+    const patientId = Number(patient.id);
+    if (!Number.isFinite(patientId)) {
+      this.snackBar.openError('No se pudo abrir el detalle de este paciente.');
+      return;
+    }
+
+    const trimmedName = patient.name?.trim();
+    this.router.navigate(['/dashboard', 'patient', patientId], {
+      queryParams: trimmedName ? { patientName: trimmedName } : undefined
     });
   }
 
