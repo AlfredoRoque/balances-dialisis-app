@@ -20,6 +20,8 @@ import { FluidBalance } from '../../../shared/models/FluidBalance';
 import { FluidBalanceService } from '../../../core/service/FluidBalanceService';
 import { FluidDateService } from "../../../core/service/FluidDateService";
 import { ExtraFluidPanelComponent } from "./extra-fluid-panel/extra-fluid-panel.component";
+import { VitalSignDetailPanelComponent } from "./vital-sign-detail-panel/vital-sign-detail-panel.component";
+import { MedicineDetailPanelComponent } from "./medicine-detail-panel/medicine-detail-panel.component";
 
 interface FluidBalanceRecord extends FluidBalance {
   id?: number;
@@ -51,7 +53,9 @@ interface ActiveSlot {
     MatDividerModule,
     MatSelectModule,
     ReactiveFormsModule,
-    ExtraFluidPanelComponent
+    ExtraFluidPanelComponent,
+    VitalSignDetailPanelComponent,
+    MedicineDetailPanelComponent
   ],
   templateUrl: './patient-detail.component.html',
   styleUrls: ['./patient-detail.component.scss']
@@ -299,6 +303,29 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     this.router.navigate(['/dashboard']);
   }
 
+  goToCalculatedBalance(): void {
+    if (!this.patientId) {
+      return;
+    }
+
+    const startValue = this.filterForm.get('startDate')?.value;
+    const endValue = this.filterForm.get('endDate')?.value;
+    const extras: { queryParams?: { startDate: string; endDate: string } } = {};
+
+    if (startValue && endValue) {
+      const startDate = new Date(startValue);
+      const endDate = new Date(endValue);
+      if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
+        extras.queryParams = {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString()
+        };
+      }
+    }
+
+    this.router.navigate(['/dashboard/patient', this.patientId, 'calculated-balance'], extras);
+  }
+
   formatBalanceDate24(value: Date | string | null): string {
     const date = this.normalizeToDate(value);
     return date ? this.formatAs24HourLabel(date) : 'Sin fecha disponible';
@@ -307,6 +334,15 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   isEditingBalance(balance: FluidBalanceRecord): boolean {
     const id = this.extractBalanceId(balance);
     return id !== null && id === this.editingBalanceId;
+  }
+
+  shouldShowDateDivider(index: number): boolean {
+    const current = this.getRenderedRow(index);
+    const previous = this.getRenderedRow(index - 1);
+    if (!current || !previous) {
+      return false;
+    }
+    return this.buildDateKey(current.date) !== this.buildDateKey(previous.date);
   }
 
   private setActiveDates(times: string[]): void {
@@ -462,5 +498,38 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       return [];
     }
     return this.buildSlotsForDate(date);
+  }
+
+  private getRenderedRow(index: number): FluidBalanceRecord | null {
+    if (index < 0) {
+      return null;
+    }
+    const dataset = this.dataSource.filteredData ?? [];
+    if (!dataset.length) {
+      return null;
+    }
+    const pageSize = this.resolvePageSize(dataset.length);
+    const pageIndex = this.paginator?.pageIndex ?? 0;
+    const globalIndex = (pageIndex * pageSize) + index;
+    if (globalIndex < 0 || globalIndex >= dataset.length) {
+      return null;
+    }
+    return dataset[globalIndex] ?? null;
+  }
+
+  private resolvePageSize(fallback: number): number {
+    const pageSize = this.paginator?.pageSize ?? fallback;
+    return pageSize > 0 ? pageSize : fallback;
+  }
+
+  private buildDateKey(value: Date | string | null): string {
+    const date = this.normalizeToDate(value);
+    if (!date) {
+      return 'invalid';
+    }
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

@@ -82,6 +82,16 @@
   overflow-x: auto;
 }
 
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+
+  button mat-icon {
+    margin-right: 0.35rem;
+  }
+}
+
 .balances-table {
   width: 100%;
   min-width: 720px;
@@ -106,6 +116,10 @@
 
   .actions-cell button + button {
     margin-left: 0.35rem;
+  }
+
+  tr.date-divider td {
+    border-top: 5px solid rgba(15, 23, 42, 0.45);
   }
 }
 

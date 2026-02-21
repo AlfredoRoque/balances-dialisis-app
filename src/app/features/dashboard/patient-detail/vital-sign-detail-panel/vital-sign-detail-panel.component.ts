@@ -14,16 +14,19 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { Subject, finalize, takeUntil } from 'rxjs';
-import { ExtraFluid } from '../../../../shared/models/ExtraFluid';
-import { ExtraFluidService } from '../../../../core/service/ExtraFluidService';
+import { MatSelectModule } from '@angular/material/select';
+import { VitalSignDetail } from '../../../../shared/models/VitalSignDetail';
+import { VitalSignDetailService } from '../../../../core/service/VitalSignDetailService';
+import { VitalSign } from '../../../../shared/models/VitalSign';
+import { VitalSignService } from '../../../../core/service/VitalSignService';
 
-interface ExtraFluidRecord extends ExtraFluid {
+interface VitalSignDetailRecord extends VitalSignDetail {
   id?: number;
-  extraFluidId?: number;
+  vitalSignDetailId?: number;
 }
 
 @Component({
-  selector: 'app-extra-fluid-panel',
+  selector: 'app-vital-sign-detail-panel',
   standalone: true,
   imports: [
     CommonModule,
@@ -39,44 +42,50 @@ interface ExtraFluidRecord extends ExtraFluid {
     MatSnackBarModule,
     MatProgressSpinnerModule,
     MatDividerModule,
+    MatSelectModule,
     ReactiveFormsModule
   ],
-  templateUrl: './extra-fluid-panel.component.html',
-  styleUrls: ['./extra-fluid-panel.component.scss']
+  templateUrl: './vital-sign-detail-panel.component.html',
+  styleUrls: ['./vital-sign-detail-panel.component.scss']
 })
-export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+export class VitalSignDetailPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input({ required: true }) patientId!: number;
   @Input() filterStart: Date | null = null;
   @Input() filterEnd: Date | null = null;
 
-  displayedColumns = ['date', 'urine', 'ingested', 'actions'];
-  dataSource = new MatTableDataSource<ExtraFluidRecord>([]);
+  displayedColumns = ['date', 'vitalSign', 'value', 'actions'];
+  dataSource = new MatTableDataSource<VitalSignDetailRecord>([]);
+
+  createForm: FormGroup;
+  rowForms: Record<string, FormGroup> = {};
 
   loading = false;
   creating = false;
   savingId: number | null = null;
   editingId: number | null = null;
 
-  createForm: FormGroup;
-  rowForms: Record<string, FormGroup> = {};
+  vitalSigns: VitalSign[] = [];
+  vitalSignsLoading = false;
 
   private destroy$ = new Subject<void>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
-    private readonly extraFluidService: ExtraFluidService,
     private readonly fb: FormBuilder,
+    private readonly vitalSignDetailService: VitalSignDetailService,
+    private readonly vitalSignService: VitalSignService,
     private readonly snackBar: MatSnackBar
   ) {
     this.createForm = this.fb.group({
       date: [new Date(), Validators.required],
-      urine: [null, [Validators.required, Validators.min(0)]],
-      ingested: [null, [Validators.required, Validators.min(0)]]
+      vitalSignId: [null, Validators.required],
+      value: ['', [Validators.required, Validators.maxLength(120)]]
     });
   }
 
   ngOnInit(): void {
+    this.loadVitalSigns();
     if (this.patientId) {
       this.loadRecords();
     }
@@ -109,22 +118,36 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     const start = this.filterStart ? new Date(this.filterStart) : null;
     const end = this.filterEnd ? new Date(this.filterEnd) : null;
     const hasValidFilter = !!start && !!end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime());
+
     const request$ = hasValidFilter
-      ? this.extraFluidService.getExtraFluidBalancesByDates(this.patientId, start!, end!)
-      : this.extraFluidService.getExtraFluidBalances(this.patientId);
+      ? this.vitalSignDetailService.getRangeVitalSignDetails(this.patientId, start!, end!)
+      : this.vitalSignDetailService.getActualVitalSignDetails(this.patientId);
 
     request$
       .pipe(takeUntil(this.destroy$), finalize(() => this.loading = false))
       .subscribe({
-        next: records => {
-          this.dataSource.data = this.normalizeRecords(records);
+        next: details => {
+          this.dataSource.data = this.normalizeRecords(details);
           this.syncRowForms(this.dataSource.data);
         },
-        error: () => this.openSnack('No pudimos cargar los registros de extra fluidos.', true)
+        error: () => this.openSnack('No pudimos cargar los signos vitales.', true)
       });
   }
 
-  startEdit(record: ExtraFluidRecord): void {
+  loadVitalSigns(): void {
+    this.vitalSignsLoading = true;
+    this.vitalSignService.getVitalSigns()
+      .pipe(takeUntil(this.destroy$), finalize(() => this.vitalSignsLoading = false))
+      .subscribe({
+        next: signs => this.vitalSigns = signs ?? [],
+        error: () => {
+          this.vitalSigns = [];
+          this.openSnack('No pudimos cargar el catálogo de signos vitales.', true);
+        }
+      });
+  }
+
+  startEdit(record: VitalSignDetailRecord): void {
     const id = this.extractRecordId(record);
     if (id === null) {
       this.openSnack('No pudimos editar este registro.', true);
@@ -134,7 +157,7 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     this.editingId = id;
   }
 
-  cancelEdit(record: ExtraFluidRecord): void {
+  cancelEdit(record: VitalSignDetailRecord): void {
     const id = this.extractRecordId(record);
     if (id === null) {
       return;
@@ -143,14 +166,14 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     if (form) {
       form.setValue({
         date: record.date ? new Date(record.date) : null,
-        urine: record.urine,
-        ingested: record.ingested
+        vitalSignId: this.extractVitalSignId(record),
+        value: record.value ?? ''
       }, { emitEvent: false });
     }
     this.editingId = null;
   }
 
-  saveRecord(record: ExtraFluidRecord): void {
+  saveRecord(record: VitalSignDetailRecord): void {
     const id = this.extractRecordId(record);
     if (id === null) {
       this.openSnack('No pudimos actualizar este registro.', true);
@@ -169,7 +192,7 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
 
     const payload = this.mapFormToPayload(form.value);
     this.savingId = id;
-    this.extraFluidService.updateExtraFluidBalance(id, payload)
+    this.vitalSignDetailService.updateVitalSignDetail(id, payload)
       .pipe(finalize(() => this.savingId = null))
       .subscribe({
         next: () => {
@@ -181,14 +204,14 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
       });
   }
 
-  deleteRecord(record: ExtraFluidRecord): void {
+  deleteRecord(record: VitalSignDetailRecord): void {
     const id = this.extractRecordId(record);
     if (id === null) {
       this.openSnack('No pudimos eliminar este registro.', true);
       return;
     }
 
-    this.extraFluidService.deleteExtraFluidBalance(id)
+    this.vitalSignDetailService.deleteVitalSignDetail(id)
       .subscribe({
         next: () => {
           if (this.editingId === id) {
@@ -214,15 +237,11 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
 
     const payload = this.mapFormToPayload({ ...this.createForm.value, patientId: this.patientId });
     this.creating = true;
-    this.extraFluidService.createExtraFluidBalance({ ...payload, patientId: this.patientId })
+    this.vitalSignDetailService.createVitalSignDetail(payload)
       .pipe(finalize(() => this.creating = false))
       .subscribe({
         next: () => {
-          this.createForm.reset({
-            date: new Date(),
-            urine: null,
-            ingested: null
-          });
+          this.resetCreateForm();
           this.openSnack('Registro agregado correctamente.');
           this.loadRecords();
         },
@@ -230,7 +249,15 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
       });
   }
 
-  isEditing(record: ExtraFluidRecord): boolean {
+  resetCreateForm(): void {
+    this.createForm.reset({
+      date: new Date(),
+      vitalSignId: null,
+      value: ''
+    });
+  }
+
+  isEditing(record: VitalSignDetailRecord): boolean {
     const id = this.extractRecordId(record);
     return id !== null && id === this.editingId;
   }
@@ -259,29 +286,40 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     }).format(date).replace(',', ' ·');
   }
 
-  getRowForm(record: ExtraFluidRecord): FormGroup | null {
+  getRowForm(record: VitalSignDetailRecord): FormGroup | null {
     const id = this.extractRecordId(record);
     return id === null ? null : this.rowForms[this.rowKey(id)] ?? null;
   }
 
-  private normalizeRecords(records: ExtraFluidRecord[]): ExtraFluidRecord[] {
+  getVitalSignLabel(record: VitalSignDetailRecord): string {
+    if (record?.vitalSign?.name) {
+      return record.vitalSign.name;
+    }
+    const id = this.extractVitalSignId(record);
+    if (id) {
+      return this.findSignById(id)?.name ?? `Signo #${id}`;
+    }
+    return 'Sin signo';
+  }
+
+  private normalizeRecords(records: VitalSignDetailRecord[]): VitalSignDetailRecord[] {
     return records.map(record => ({
       ...record,
       date: record.date ? new Date(record.date) : null
     }));
   }
 
-  private mapFormToPayload(formValue: any): ExtraFluid {
+  private mapFormToPayload(formValue: any): VitalSignDetail {
     const baseDate = formValue.date ? new Date(formValue.date) : null;
     return {
       patientId: formValue.patientId ?? this.patientId,
-      urine: Number(formValue.urine),
-      ingested: Number(formValue.ingested),
-      date: baseDate ? baseDate : null
+      vitalSign: this.buildVitalSignPayload(formValue.vitalSignId),
+      value: (formValue.value ?? '').toString().trim(),
+      date: baseDate ? this.toUtcIsoString(baseDate) : null
     };
   }
 
-  private ensureRowForm(record: ExtraFluidRecord): void {
+  private ensureRowForm(record: VitalSignDetailRecord): void {
     const id = this.extractRecordId(record);
     if (id === null) {
       return;
@@ -291,13 +329,13 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     if (!this.rowForms[key]) {
       this.rowForms[key] = this.fb.group({
         date: [record.date ? new Date(record.date) : null, Validators.required],
-        urine: [record.urine, [Validators.required, Validators.min(0)]],
-        ingested: [record.ingested, [Validators.required, Validators.min(0)]]
+        vitalSignId: [this.extractVitalSignId(record), Validators.required],
+        value: [record.value ?? '', [Validators.required, Validators.maxLength(120)]]
       });
     }
   }
 
-  private syncRowForms(records: ExtraFluidRecord[]): void {
+  private syncRowForms(records: VitalSignDetailRecord[]): void {
     const knownIds = new Set(Object.keys(this.rowForms));
     records.forEach(record => {
       const id = this.extractRecordId(record);
@@ -310,8 +348,8 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
       if (form) {
         form.setValue({
           date: record.date ? new Date(record.date) : null,
-          urine: record.urine,
-          ingested: record.ingested
+          vitalSignId: this.extractVitalSignId(record),
+          value: record.value ?? ''
         }, { emitEvent: false });
       } else {
         this.ensureRowForm(record);
@@ -320,9 +358,13 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     knownIds.forEach(id => delete this.rowForms[id]);
   }
 
-  private extractRecordId(record: ExtraFluidRecord): number | null {
-    const candidate = record.id ?? record.extraFluidId ?? (record as any).fluidId ?? null;
+  private extractRecordId(record: VitalSignDetailRecord): number | null {
+    const candidate = (record as any).id ?? record.vitalSignDetailId ?? null;
     return candidate == null ? null : Number(candidate);
+  }
+
+  private extractVitalSignId(record: VitalSignDetailRecord): number | null {
+    return record?.vitalSign?.id ?? null;
   }
 
   private rowKey(id: number): string {
@@ -344,6 +386,19 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     return first.getTime() === second.getTime();
   }
 
+  private toUtcIsoString(date: Date): string {
+    const utcDate = new Date(Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      date.getHours(),
+      date.getMinutes(),
+      0,
+      0
+    ));
+    return utcDate.toISOString();
+  }
+
   private openSnack(message: string, isError = false): void {
     this.snackBar.open(message, 'Cerrar', {
       duration: 4000,
@@ -351,7 +406,20 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     });
   }
 
-  private getRenderedRow(index: number): ExtraFluidRecord | null {
+  private buildVitalSignPayload(rawId: unknown): VitalSign {
+    const id = Number(rawId);
+    const fallback: VitalSign = { name: '' };
+    if (!Number.isFinite(id)) {
+      return fallback;
+    }
+    return this.findSignById(id) ?? { id, name: '' };
+  }
+
+  private findSignById(id: number): VitalSign | undefined {
+    return this.vitalSigns.find(sign => sign.id === id);
+  }
+
+  private getRenderedRow(index: number): VitalSignDetailRecord | null {
     if (index < 0) {
       return null;
     }

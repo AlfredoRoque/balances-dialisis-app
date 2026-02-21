@@ -1,10 +1,10 @@
-<section class="extra-fluid-shell">
-  <mat-card class="extra-fluid-card">
+<section class="medicine-shell">
+  <mat-card class="medicine-card">
     <header class="card-head">
       <div>
-        <p class="eyebrow">Volúmenes extra</p>
-        <h2>Registro de líquidos adicionales</h2>
-        <p class="subtitle">Urina e ingesta registrados fuera del balance principal.</p>
+        <p class="eyebrow">Medicamentos</p>
+        <h2>Tratamientos administrados</h2>
+        <p class="subtitle">Registra dosis y frecuencias aplicadas al paciente.</p>
       </div>
       <button mat-stroked-button color="accent" type="button" (click)="loadRecords()" [disabled]="loading">
         <mat-icon>refresh</mat-icon>
@@ -13,7 +13,7 @@
     </header>
 
     <section class="table-section" *ngIf="!loading; else loadingState">
-      <table mat-table [dataSource]="dataSource" class="extra-table">
+      <table mat-table [dataSource]="dataSource" class="medicine-table">
         <ng-container matColumnDef="date">
           <th mat-header-cell *matHeaderCellDef>Fecha</th>
           <td mat-cell *matCellDef="let record">
@@ -36,42 +36,65 @@
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="urine">
-          <th mat-header-cell *matHeaderCellDef>Orina (ml)</th>
+        <ng-container matColumnDef="medicine">
+          <th mat-header-cell *matHeaderCellDef>Medicamento</th>
           <td mat-cell *matCellDef="let record">
-            <ng-container *ngIf="isEditing(record) && getRowForm(record) as rowForm; else urineView">
+            <ng-container *ngIf="isEditing(record) && getRowForm(record) as rowForm; else medicineView">
               <div class="inline-edit" [formGroup]="rowForm">
                 <mat-form-field appearance="outline" class="inline-field">
-                  <mat-label>Orina (ml)</mat-label>
-                  <input matInput type="number" min="0" formControlName="urine">
-                  <mat-error *ngIf="rowForm.get('urine')?.invalid && rowForm.get('urine')?.touched">
-                    Cantidad inválida.
+                  <mat-label>Medicamento</mat-label>
+                  <mat-select formControlName="medicineId" [disabled]="medicinesLoading || !medicines.length">
+                    <mat-option *ngIf="medicinesLoading" disabled>Cargando medicamentos...</mat-option>
+                    <mat-option *ngFor="let med of medicines" [value]="med.id">{{ med.name }}</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="rowForm.get('medicineId')?.invalid && rowForm.get('medicineId')?.touched">
+                    Selecciona un medicamento.
                   </mat-error>
                 </mat-form-field>
               </div>
             </ng-container>
-            <ng-template #urineView>
-              {{ record.urine | number: '1.0-1' }} ml
+            <ng-template #medicineView>
+              {{ getMedicineLabel(record) }}
             </ng-template>
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="ingested">
-          <th mat-header-cell *matHeaderCellDef>Ingerido (ml)</th>
+        <ng-container matColumnDef="dose">
+          <th mat-header-cell *matHeaderCellDef>Dosis</th>
           <td mat-cell *matCellDef="let record">
-            <ng-container *ngIf="isEditing(record) && getRowForm(record) as rowForm; else ingestedView">
+            <ng-container *ngIf="isEditing(record) && getRowForm(record) as rowForm; else doseView">
               <div class="inline-edit" [formGroup]="rowForm">
                 <mat-form-field appearance="outline" class="inline-field">
-                  <mat-label>Ingerido (ml)</mat-label>
-                  <input matInput type="number" min="0" formControlName="ingested">
-                  <mat-error *ngIf="rowForm.get('ingested')?.invalid && rowForm.get('ingested')?.touched">
-                    Cantidad inválida.
+                  <mat-label>Dosis</mat-label>
+                  <input matInput formControlName="dose" maxlength="120">
+                  <mat-error *ngIf="rowForm.get('dose')?.invalid && rowForm.get('dose')?.touched">
+                    Ingresa una dosis válida.
                   </mat-error>
                 </mat-form-field>
               </div>
             </ng-container>
-            <ng-template #ingestedView>
-              {{ record.ingested | number: '1.0-1' }} ml
+            <ng-template #doseView>
+              {{ record.dose || 'Sin dosis' }}
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="frequency">
+          <th mat-header-cell *matHeaderCellDef>Frecuencia</th>
+          <td mat-cell *matCellDef="let record">
+            <ng-container *ngIf="isEditing(record) && getRowForm(record) as rowForm; else frequencyView">
+              <div class="inline-edit" [formGroup]="rowForm">
+                <mat-form-field appearance="outline" class="inline-field">
+                  <mat-label>Frecuencia</mat-label>
+                  <input matInput formControlName="frequency" maxlength="120">
+                  <mat-error *ngIf="rowForm.get('frequency')?.invalid && rowForm.get('frequency')?.touched">
+                    Ingresa una frecuencia válida.
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </ng-container>
+            <ng-template #frequencyView>
+              {{ record.frequency || 'Sin frecuencia' }}
             </ng-template>
           </td>
         </ng-container>
@@ -100,8 +123,7 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; let i = index; columns: displayedColumns;"
-            [class.date-divider]="shouldShowDateDivider(i)"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
       <mat-paginator [pageSize]="5" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
     </section>
@@ -117,10 +139,10 @@
 
     <section class="create-section">
       <header>
-        <h3>Agregar extra fluid</h3>
-        <p>Registra nuevas mediciones de orina e ingesta.</p>
+        <h3>Agregar medicamento</h3>
+        <p>Captura una nueva administración.</p>
       </header>
-      <form [formGroup]="createForm" (ngSubmit)= "submitCreate()">
+      <form [formGroup]="createForm" (ngSubmit)="submitCreate()">
         <mat-form-field appearance="outline">
           <mat-label class="input-label">Fecha</mat-label>
           <input matInput [matDatepicker]="createPicker" formControlName="date" class="input-content">
@@ -132,26 +154,41 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label class="input-label">Orina (ml)</mat-label>
-          <input matInput type="number" min="0" formControlName="urine" class="input-content">
-          <mat-error *ngIf="createForm.get('urine')?.invalid && createForm.get('urine')?.touched">
-            Cantidad inválida.
+          <mat-label class="input-label">Medicamento</mat-label>
+          <mat-select formControlName="medicineId" [disabled]="medicinesLoading || !medicines.length" class="input-content">
+            <mat-option *ngIf="medicinesLoading" disabled>Cargando medicamentos...</mat-option>
+            <mat-option *ngFor="let med of medicines" [value]="med.id">{{ med.name }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="createForm.get('medicineId')?.invalid && createForm.get('medicineId')?.touched">
+            Selecciona un medicamento.
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label class="input-label">Ingerido (ml)</mat-label>
-          <input matInput type="number" min="0" formControlName="ingested" class="input-content">
-          <mat-error *ngIf="createForm.get('ingested')?.invalid && createForm.get('ingested')?.touched">
-            Cantidad inválida.
+          <mat-label class="input-label">Dosis</mat-label>
+          <input matInput formControlName="dose" maxlength="120" class="input-content">
+          <mat-error *ngIf="createForm.get('dose')?.invalid && createForm.get('dose')?.touched">
+            Ingresa una dosis válida.
           </mat-error>
         </mat-form-field>
 
+        <mat-form-field appearance="outline">
+          <mat-label class="input-label">Frecuencia</mat-label>
+          <input matInput formControlName="frequency" maxlength="120" class="input-content">
+          <mat-error *ngIf="createForm.get('frequency')?.invalid && createForm.get('frequency')?.touched">
+            Ingresa una frecuencia válida.
+          </mat-error>
+        </mat-form-field>
+
+        <p class="no-medicines" *ngIf="!medicinesLoading && !medicines.length">
+          Agrega medicamentos en el módulo correspondiente para habilitar esta sección.
+        </p>
+
         <div class="form-actions">
-          <button mat-stroked-button type="button" (click)="createForm.reset()">
+          <button mat-stroked-button type="button" (click)="resetCreateForm()">
             Limpiar
           </button>
-          <button mat-flat-button color="primary" type="submit" [disabled]="createForm.invalid || creating">
+          <button mat-flat-button color="primary" type="submit" [disabled]="createForm.invalid || creating || !medicines.length">
             {{ creating ? 'Guardando...' : 'Agregar registro' }}
           </button>
         </div>

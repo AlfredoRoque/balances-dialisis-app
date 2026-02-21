@@ -1,0 +1,123 @@
+<section class="calculated-shell">
+  <mat-card class="calculated-card">
+    <header class="card-head">
+      <div>
+        <p class="eyebrow">Balance calculado</p>
+        <h1>Paciente · ID {{ patientId }}</h1>
+        <p class="subtitle">Rango analizado: {{ formatRange() }}</p>
+      </div>
+      <div class="card-actions">
+        <button mat-stroked-button type="button" (click)="downloadPdf()" [disabled]="loading || downloading">
+          <mat-icon>picture_as_pdf</mat-icon>
+          Descargar PDF
+        </button>
+        <button mat-stroked-button type="button" (click)="sendPdfByEmail()" [disabled]="loading || emailing">
+          <mat-icon>mail</mat-icon>
+          Enviar al correo
+        </button>
+        <button mat-stroked-button type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Volver al detalle
+        </button>
+        <button mat-flat-button color="primary" type="button" (click)="loadCalculatedBalance()" [disabled]="loading">
+          <mat-icon>refresh</mat-icon>
+          Actualizar
+        </button>
+      </div>
+    </header>
+
+    <p class="limit-note">Mostramos hasta 15 balances calculados por carga para mantener la vista ligera.</p>
+
+    <section class="balances-list" *ngIf="summaries.length; else emptyState">
+      <ng-container *ngFor="let stats of summaries; let idx = index">
+        <article class="balance-block">
+          <header class="block-head">
+            <div>
+              <p class="eyebrow">Balance {{ idx + 1 }}</p>
+              <h2>Resumen consolidado</h2>
+            </div>
+            <span class="rows-pill" *ngIf="stats.fluidBalances?.length">
+              {{ stats.fluidBalances.length }} registros
+            </span>
+          </header>
+
+          <section class="summary-grid">
+            <article class="summary-card">
+              <p class="label">Balance parcial</p>
+              <p class="value">{{ stats.partialBalance | number: '1.0-1' }} ml</p>
+            </article>
+            <article class="summary-card">
+              <p class="label">Orina</p>
+              <p class="value">{{ stats.totalUrine | number: '1.0-1' }} ml</p>
+            </article>
+            <article class="summary-card">
+              <p class="label">Balance total</p>
+              <p class="value">{{ stats.totalBalance | number: '1.0-1' }} ml</p>
+            </article>
+            <article class="summary-card">
+              <p class="label">Ingerido</p>
+              <p class="value">{{ stats.totalIngested | number: '1.0-1' }} ml</p>
+            </article>
+            <article class="summary-card highlight">
+              <p class="label">Balance final</p>
+              <p class="value">{{ stats.finalBalance | number: '1.0-1' }} ml</p>
+            </article>
+          </section>
+
+          <section class="table-section">
+            <table mat-table [dataSource]="stats.fluidBalances" class="report-table" *ngIf="stats.fluidBalances?.length; else noRows">
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                <td mat-cell *matCellDef="let row">{{ formatDate(row.date) }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef>Descripción</th>
+                <td mat-cell *matCellDef="let row">{{ row.descriptionFluid || 'Sin descripción' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="infused">
+                <th mat-header-cell *matHeaderCellDef>Infundido</th>
+                <td mat-cell *matCellDef="let row">{{ row.infused | number: '1.0-1' }} ml</td>
+              </ng-container>
+
+              <ng-container matColumnDef="drained">
+                <th mat-header-cell *matHeaderCellDef>Drenado</th>
+                <td mat-cell *matCellDef="let row">{{ row.drained | number: '1.0-1' }} ml</td>
+              </ng-container>
+
+              <ng-container matColumnDef="ultrafiltration">
+                <th mat-header-cell *matHeaderCellDef>Ultrafiltración</th>
+                <td mat-cell *matCellDef="let row">{{ row.ultrafiltration | number: '1.0-1' }} ml</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+
+            <ng-template #noRows>
+              <div class="empty-state">
+                <p>Sin movimientos en este balance.</p>
+              </div>
+            </ng-template>
+          </section>
+        </article>
+
+        <mat-divider *ngIf="idx < summaries.length - 1"></mat-divider>
+      </ng-container>
+    </section>
+
+    <ng-template #loadingState>
+      <div class="loading-state">
+        <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+        <p>Calculando balance...</p>
+      </div>
+    </ng-template>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <p>No se encontraron balances calculados.</p>
+      </div>
+    </ng-template>
+  </mat-card>
+</section>

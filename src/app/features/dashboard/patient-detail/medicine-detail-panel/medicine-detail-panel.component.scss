@@ -1,8 +1,8 @@
-.extra-fluid-shell {
+.medicine-shell {
   margin-top: 2rem;
 }
 
-.extra-fluid-card {
+.medicine-card {
   border-radius: 1.5rem;
   background: rgba(2, 6, 23, 0.85);
   box-shadow: 0 30px 70px rgba(2, 6, 23, 0.45);
@@ -52,9 +52,9 @@
   overflow-x: auto;
 }
 
-.extra-table {
+.medicine-table {
   width: 100%;
-  min-width: 640px;
+  min-width: 720px;
 
   th {
     color: black;
@@ -72,10 +72,6 @@
 
   .actions-cell button + button {
     margin-left: 0.35rem;
-  }
-
-  tr.date-divider td {
-    border-top: 5px solid rgba(15, 23, 42, 0.45);
   }
 }
 
@@ -135,5 +131,12 @@
 }
 
 .input-content {
-  color: white!important;
+  color: white !important;
+}
+
+.no-medicines {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: rgba(248, 250, 252, 0.8);
+  font-size: 0.9rem;
 }

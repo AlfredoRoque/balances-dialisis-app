@@ -13,17 +13,20 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
 import { Subject, finalize, takeUntil } from 'rxjs';
-import { ExtraFluid } from '../../../../shared/models/ExtraFluid';
-import { ExtraFluidService } from '../../../../core/service/ExtraFluidService';
+import { MedicineDetail } from '../../../../shared/models/MedicineDetail';
+import { MedicineDetailService } from '../../../../core/service/MedicineDetailService';
+import { Medicine } from '../../../../shared/models/Medicine';
+import { MedicineService } from '../../../../core/service/MedicineService';
 
-interface ExtraFluidRecord extends ExtraFluid {
+interface MedicineDetailRecord extends MedicineDetail {
   id?: number;
-  extraFluidId?: number;
+  medicineDetailId?: number;
 }
 
 @Component({
-  selector: 'app-extra-fluid-panel',
+  selector: 'app-medicine-detail-panel',
   standalone: true,
   imports: [
     CommonModule,
@@ -39,55 +42,56 @@ interface ExtraFluidRecord extends ExtraFluid {
     MatSnackBarModule,
     MatProgressSpinnerModule,
     MatDividerModule,
+    MatSelectModule,
     ReactiveFormsModule
   ],
-  templateUrl: './extra-fluid-panel.component.html',
-  styleUrls: ['./extra-fluid-panel.component.scss']
+  templateUrl: './medicine-detail-panel.component.html',
+  styleUrls: ['./medicine-detail-panel.component.scss']
 })
-export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+export class MedicineDetailPanelComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input({ required: true }) patientId!: number;
-  @Input() filterStart: Date | null = null;
-  @Input() filterEnd: Date | null = null;
 
-  displayedColumns = ['date', 'urine', 'ingested', 'actions'];
-  dataSource = new MatTableDataSource<ExtraFluidRecord>([]);
+  displayedColumns = ['date', 'medicine', 'dose', 'frequency', 'actions'];
+  dataSource = new MatTableDataSource<MedicineDetailRecord>([]);
+
+  createForm: FormGroup;
+  rowForms: Record<string, FormGroup> = {};
 
   loading = false;
   creating = false;
   savingId: number | null = null;
   editingId: number | null = null;
 
-  createForm: FormGroup;
-  rowForms: Record<string, FormGroup> = {};
+  medicines: Medicine[] = [];
+  medicinesLoading = false;
 
   private destroy$ = new Subject<void>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
-    private readonly extraFluidService: ExtraFluidService,
     private readonly fb: FormBuilder,
+    private readonly medicineDetailService: MedicineDetailService,
+    private readonly medicineService: MedicineService,
     private readonly snackBar: MatSnackBar
   ) {
     this.createForm = this.fb.group({
       date: [new Date(), Validators.required],
-      urine: [null, [Validators.required, Validators.min(0)]],
-      ingested: [null, [Validators.required, Validators.min(0)]]
+      medicineId: [null, Validators.required],
+      dose: ['', [Validators.required, Validators.maxLength(120)]],
+      frequency: ['', [Validators.required, Validators.maxLength(120)]]
     });
   }
 
   ngOnInit(): void {
+    this.loadMedicines();
     if (this.patientId) {
       this.loadRecords();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    const patientChanged = !!changes['patientId'] && !changes['patientId'].firstChange;
-    const filterStartChanged = !!changes['filterStart'] && !this.areDatesEqual(changes['filterStart'].previousValue, changes['filterStart'].currentValue);
-    const filterEndChanged = !!changes['filterEnd'] && !this.areDatesEqual(changes['filterEnd'].previousValue, changes['filterEnd'].currentValue);
-
-    if (patientChanged || filterStartChanged || filterEndChanged) {
+    if (changes['patientId'] && !changes['patientId'].firstChange) {
       this.loadRecords();
     }
   }
@@ -106,25 +110,31 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
       return;
     }
     this.loading = true;
-    const start = this.filterStart ? new Date(this.filterStart) : null;
-    const end = this.filterEnd ? new Date(this.filterEnd) : null;
-    const hasValidFilter = !!start && !!end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime());
-    const request$ = hasValidFilter
-      ? this.extraFluidService.getExtraFluidBalancesByDates(this.patientId, start!, end!)
-      : this.extraFluidService.getExtraFluidBalances(this.patientId);
-
-    request$
+    this.medicineDetailService.getMedicineDetails(this.patientId)
       .pipe(takeUntil(this.destroy$), finalize(() => this.loading = false))
       .subscribe({
-        next: records => {
-          this.dataSource.data = this.normalizeRecords(records);
+        next: details => {
+          this.dataSource.data = this.normalizeRecords(details);
           this.syncRowForms(this.dataSource.data);
         },
-        error: () => this.openSnack('No pudimos cargar los registros de extra fluidos.', true)
+        error: () => this.openSnack('No pudimos cargar los medicamentos.', true)
       });
   }
 
-  startEdit(record: ExtraFluidRecord): void {
+  loadMedicines(): void {
+    this.medicinesLoading = true;
+    this.medicineService.getMedicines()
+      .pipe(takeUntil(this.destroy$), finalize(() => this.medicinesLoading = false))
+      .subscribe({
+        next: meds => this.medicines = meds ?? [],
+        error: () => {
+          this.medicines = [];
+          this.openSnack('No pudimos cargar el catálogo de medicamentos.', true);
+        }
+      });
+  }
+
+  startEdit(record: MedicineDetailRecord): void {
     const id = this.extractRecordId(record);
     if (id === null) {
       this.openSnack('No pudimos editar este registro.', true);
@@ -134,7 +144,7 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     this.editingId = id;
   }
 
-  cancelEdit(record: ExtraFluidRecord): void {
+  cancelEdit(record: MedicineDetailRecord): void {
     const id = this.extractRecordId(record);
     if (id === null) {
       return;
@@ -143,14 +153,15 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     if (form) {
       form.setValue({
         date: record.date ? new Date(record.date) : null,
-        urine: record.urine,
-        ingested: record.ingested
+        medicineId: this.extractMedicineId(record),
+        dose: record.dose ?? '',
+        frequency: record.frequency ?? ''
       }, { emitEvent: false });
     }
     this.editingId = null;
   }
 
-  saveRecord(record: ExtraFluidRecord): void {
+  saveRecord(record: MedicineDetailRecord): void {
     const id = this.extractRecordId(record);
     if (id === null) {
       this.openSnack('No pudimos actualizar este registro.', true);
@@ -169,7 +180,7 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
 
     const payload = this.mapFormToPayload(form.value);
     this.savingId = id;
-    this.extraFluidService.updateExtraFluidBalance(id, payload)
+    this.medicineDetailService.updateMedicineDetail(id, payload)
       .pipe(finalize(() => this.savingId = null))
       .subscribe({
         next: () => {
@@ -181,14 +192,14 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
       });
   }
 
-  deleteRecord(record: ExtraFluidRecord): void {
+  deleteRecord(record: MedicineDetailRecord): void {
     const id = this.extractRecordId(record);
     if (id === null) {
       this.openSnack('No pudimos eliminar este registro.', true);
       return;
     }
 
-    this.extraFluidService.deleteExtraFluidBalance(id)
+    this.medicineDetailService.deleteMedicineDetail(id)
       .subscribe({
         next: () => {
           if (this.editingId === id) {
@@ -214,15 +225,11 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
 
     const payload = this.mapFormToPayload({ ...this.createForm.value, patientId: this.patientId });
     this.creating = true;
-    this.extraFluidService.createExtraFluidBalance({ ...payload, patientId: this.patientId })
+    this.medicineDetailService.createMedicineDetail(payload)
       .pipe(finalize(() => this.creating = false))
       .subscribe({
         next: () => {
-          this.createForm.reset({
-            date: new Date(),
-            urine: null,
-            ingested: null
-          });
+          this.resetCreateForm();
           this.openSnack('Registro agregado correctamente.');
           this.loadRecords();
         },
@@ -230,18 +237,18 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
       });
   }
 
-  isEditing(record: ExtraFluidRecord): boolean {
-    const id = this.extractRecordId(record);
-    return id !== null && id === this.editingId;
+  resetCreateForm(): void {
+    this.createForm.reset({
+      date: new Date(),
+      medicineId: null,
+      dose: '',
+      frequency: ''
+    });
   }
 
-  shouldShowDateDivider(index: number): boolean {
-    const current = this.getRenderedRow(index);
-    const previous = this.getRenderedRow(index - 1);
-    if (!current || !previous) {
-      return false;
-    }
-    return this.buildDateKey(current.date) !== this.buildDateKey(previous.date);
+  isEditing(record: MedicineDetailRecord): boolean {
+    const id = this.extractRecordId(record);
+    return id !== null && id === this.editingId;
   }
 
   formatRecordDate(value: Date | string | null): string {
@@ -259,29 +266,41 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     }).format(date).replace(',', ' ·');
   }
 
-  getRowForm(record: ExtraFluidRecord): FormGroup | null {
+  getRowForm(record: MedicineDetailRecord): FormGroup | null {
     const id = this.extractRecordId(record);
     return id === null ? null : this.rowForms[this.rowKey(id)] ?? null;
   }
 
-  private normalizeRecords(records: ExtraFluidRecord[]): ExtraFluidRecord[] {
+  getMedicineLabel(record: MedicineDetailRecord): string {
+    if (record?.medicine?.name) {
+      return record.medicine.name;
+    }
+    const id = this.extractMedicineId(record);
+    if (id) {
+      return this.findMedicineById(id)?.name ?? `Medicamento #${id}`;
+    }
+    return 'Sin medicamento';
+  }
+
+  private normalizeRecords(records: MedicineDetailRecord[]): MedicineDetailRecord[] {
     return records.map(record => ({
       ...record,
       date: record.date ? new Date(record.date) : null
     }));
   }
 
-  private mapFormToPayload(formValue: any): ExtraFluid {
+  private mapFormToPayload(formValue: any): MedicineDetail {
     const baseDate = formValue.date ? new Date(formValue.date) : null;
     return {
       patientId: formValue.patientId ?? this.patientId,
-      urine: Number(formValue.urine),
-      ingested: Number(formValue.ingested),
-      date: baseDate ? baseDate : null
+      medicine: this.buildMedicinePayload(formValue.medicineId),
+      dose: (formValue.dose ?? '').toString().trim(),
+      frequency: (formValue.frequency ?? '').toString().trim(),
+      date: baseDate ? this.toUtcIsoString(baseDate) : null
     };
   }
 
-  private ensureRowForm(record: ExtraFluidRecord): void {
+  private ensureRowForm(record: MedicineDetailRecord): void {
     const id = this.extractRecordId(record);
     if (id === null) {
       return;
@@ -291,13 +310,14 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     if (!this.rowForms[key]) {
       this.rowForms[key] = this.fb.group({
         date: [record.date ? new Date(record.date) : null, Validators.required],
-        urine: [record.urine, [Validators.required, Validators.min(0)]],
-        ingested: [record.ingested, [Validators.required, Validators.min(0)]]
+        medicineId: [this.extractMedicineId(record), Validators.required],
+        dose: [record.dose ?? '', [Validators.required, Validators.maxLength(120)]],
+        frequency: [record.frequency ?? '', [Validators.required, Validators.maxLength(120)]]
       });
     }
   }
 
-  private syncRowForms(records: ExtraFluidRecord[]): void {
+  private syncRowForms(records: MedicineDetailRecord[]): void {
     const knownIds = new Set(Object.keys(this.rowForms));
     records.forEach(record => {
       const id = this.extractRecordId(record);
@@ -310,8 +330,9 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
       if (form) {
         form.setValue({
           date: record.date ? new Date(record.date) : null,
-          urine: record.urine,
-          ingested: record.ingested
+          medicineId: this.extractMedicineId(record),
+          dose: record.dose ?? '',
+          frequency: record.frequency ?? ''
         }, { emitEvent: false });
       } else {
         this.ensureRowForm(record);
@@ -320,28 +341,43 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
     knownIds.forEach(id => delete this.rowForms[id]);
   }
 
-  private extractRecordId(record: ExtraFluidRecord): number | null {
-    const candidate = record.id ?? record.extraFluidId ?? (record as any).fluidId ?? null;
+  private extractRecordId(record: MedicineDetailRecord): number | null {
+    const candidate = (record as any).id ?? record.medicineDetailId ?? null;
     return candidate == null ? null : Number(candidate);
+  }
+
+  private extractMedicineId(record: MedicineDetailRecord): number | null {
+    return record?.medicine?.id ?? null;
   }
 
   private rowKey(id: number): string {
     return id.toString();
   }
 
-  private areDatesEqual(a: unknown, b: unknown): boolean {
-    if (!a && !b) {
-      return true;
+  private toUtcIsoString(date: Date): string {
+    const utcDate = new Date(Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      date.getHours(),
+      date.getMinutes(),
+      0,
+      0
+    ));
+    return utcDate.toISOString();
+  }
+
+  private buildMedicinePayload(rawId: unknown): Medicine {
+    const id = Number(rawId);
+    const fallback: Medicine = { name: '' };
+    if (!Number.isFinite(id)) {
+      return fallback;
     }
-    if (!a || !b) {
-      return false;
-    }
-    const first = new Date(a as any);
-    const second = new Date(b as any);
-    if (Number.isNaN(first.getTime()) || Number.isNaN(second.getTime())) {
-      return false;
-    }
-    return first.getTime() === second.getTime();
+    return this.findMedicineById(id) ?? { id, name: '' };
+  }
+
+  private findMedicineById(id: number): Medicine | undefined {
+    return this.medicines.find(med => med.id === id);
   }
 
   private openSnack(message: string, isError = false): void {
@@ -349,49 +385,5 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
       duration: 4000,
       panelClass: [isError ? 'snackbar-error' : 'snackbar-success']
     });
-  }
-
-  private getRenderedRow(index: number): ExtraFluidRecord | null {
-    if (index < 0) {
-      return null;
-    }
-    const dataset = this.dataSource.filteredData ?? [];
-    if (!dataset.length) {
-      return null;
-    }
-    const pageSize = this.resolvePageSize(dataset.length);
-    const pageIndex = this.paginator?.pageIndex ?? 0;
-    const globalIndex = (pageIndex * pageSize) + index;
-    if (globalIndex < 0 || globalIndex >= dataset.length) {
-      return null;
-    }
-    return dataset[globalIndex] ?? null;
-  }
-
-  private resolvePageSize(fallback: number): number {
-    const pageSize = this.paginator?.pageSize ?? fallback;
-    return pageSize > 0 ? pageSize : fallback;
-  }
-
-  private buildDateKey(value: Date | string | null): string {
-    const date = this.toDate(value);
-    if (!date) {
-      return 'invalid';
-    }
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  private toDate(value: Date | string | null): Date | null {
-    if (!value) {
-      return null;
-    }
-    if (value instanceof Date) {
-      return value;
-    }
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 }

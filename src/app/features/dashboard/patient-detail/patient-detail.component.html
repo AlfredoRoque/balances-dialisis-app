@@ -42,6 +42,12 @@
     </section>
 
     <section class="table-section" *ngIf="!loading; else loadingState">
+      <div class="table-actions">
+        <button mat-stroked-button color="accent" type="button" (click)="goToCalculatedBalance()">
+          <mat-icon>analytics</mat-icon>
+          Ver balance calculado
+        </button>
+      </div>
       <table mat-table [dataSource]="dataSource" class="balances-table">
         <ng-container matColumnDef="date">
           <th mat-header-cell *matHeaderCellDef>Fecha</th>
@@ -150,7 +156,8 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr mat-row *matRowDef="let row; let i = index; columns: displayedColumns;"
+            [class.date-divider]="shouldShowDateDivider(i)"></tr>
       </table>
       <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
     </section>
@@ -226,5 +233,17 @@
     </section>
   </mat-card>
 
-  <app-extra-fluid-panel [patientId]="patientId"></app-extra-fluid-panel>
+  <app-extra-fluid-panel
+    [patientId]="patientId"
+    [filterStart]="filterForm.get('startDate')?.value"
+    [filterEnd]="filterForm.get('endDate')?.value">
+  </app-extra-fluid-panel>
+
+  <app-vital-sign-detail-panel
+    [patientId]="patientId"
+    [filterStart]="filterForm.get('startDate')?.value"
+    [filterEnd]="filterForm.get('endDate')?.value">
+  </app-vital-sign-detail-panel>
+
+  <app-medicine-detail-panel [patientId]="patientId"></app-medicine-detail-panel>
 </section>

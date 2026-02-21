@@ -1,8 +1,8 @@
-.extra-fluid-shell {
+.vitals-shell {
   margin-top: 2rem;
 }
 
-.extra-fluid-card {
+.vitals-card {
   border-radius: 1.5rem;
   background: rgba(2, 6, 23, 0.85);
   box-shadow: 0 30px 70px rgba(2, 6, 23, 0.45);
@@ -52,7 +52,7 @@
   overflow-x: auto;
 }
 
-.extra-table {
+.sign-table {
   width: 100%;
   min-width: 640px;
 
@@ -135,5 +135,12 @@
 }
 
 .input-content {
-  color: white!important;
+  color: white !important;
+}
+
+.no-signs {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: rgba(248, 250, 252, 0.8);
+  font-size: 0.9rem;
 }
