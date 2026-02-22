@@ -6,10 +6,13 @@
         <h1>{{ patientLabel }} · ID {{ patientId }}</h1>
         <p class="subtitle">Consulta, registra y administra los balances de fluidos.</p>
       </div>
-      <button mat-stroked-button color="accent" type="button" (click)="goBack()">
-        <mat-icon>arrow_back</mat-icon>
-        Volver al dashboard
-      </button>
+      <div class="header-actions">
+        <button mat-stroked-button color="accent" type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Volver al dashboard
+        </button>
+        <app-logout-button></app-logout-button>
+      </div>
     </header>
 
     <section class="filters">

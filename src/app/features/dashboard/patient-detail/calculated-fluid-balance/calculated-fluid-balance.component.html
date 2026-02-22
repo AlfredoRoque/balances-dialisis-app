@@ -1,9 +1,10 @@
 <section class="calculated-shell">
   <mat-card class="calculated-card">
+    <app-logout-button style="align-self: end;"></app-logout-button>
     <header class="card-head">
-      <div>
+      <div class="patient-info">
         <p class="eyebrow">Balance calculado</p>
-        <h1>Paciente · ID {{ patientId }}</h1>
+        <h1>{{ patientName ?? 'Paciente' }} · ID {{ patientId }}</h1>
         <p class="subtitle">Rango analizado: {{ formatRange() }}</p>
       </div>
       <div class="card-actions">
@@ -26,7 +27,7 @@
       </div>
     </header>
 
-    <p class="limit-note">Mostramos hasta 15 balances calculados por carga para mantener la vista ligera.</p>
+    <p class="limit-note">Mostramos hasta 15 balances calculados, si hay más descarga el PDF o envíalo por correo para ver todos.</p>
 
     <section class="balances-list" *ngIf="summaries.length; else emptyState">
       <ng-container *ngFor="let stats of summaries; let idx = index">

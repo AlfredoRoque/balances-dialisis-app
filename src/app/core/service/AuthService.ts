@@ -2,6 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
 import { SessionTimerService } from "./session-timer.service";
+import { Observable, finalize } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -27,13 +28,30 @@ export class AuthService {
     });
   }
 
+  getPublicKey(): Observable<string> {
+    return this.http.get(`${this.API}/public-key`, { responseType: 'text' });
+  }
+
   getToken() {
     return localStorage.getItem('token');
   }
 
   logout() {
-    this.handleLogout();
-    this.router.navigate(['/login']);
+    this.logoutBack().pipe(finalize(() => {
+       this.handleLogout();
+       this.router.navigate(['/login']);
+    })).subscribe({
+      next: () => {
+        console.log('Logout successful');
+      },
+      error: (error) => {
+        console.log('Logout failed', error);
+      }
+    });
+  }
+
+  logoutBack() {
+    return this.http.get(`${this.API}/logout`);
   }
 
   isTokenExpired(token: string): boolean {

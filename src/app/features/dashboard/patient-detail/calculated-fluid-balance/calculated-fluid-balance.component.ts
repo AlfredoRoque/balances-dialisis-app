@@ -11,6 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CalculatedFluidBalanceService } from '../../../../core/service/CalculatedFluidBalanceService';
 import { CalculatedFluidBalance } from '../../../../shared/models/CalculatedFluidBalance';
 import { FluidBalanceReport } from '../../../../shared/models/FluidBalanceReport';
+import { LogoutButtonComponent } from '../../../../shared/components/logout-button/logout-button.component';
 import { Subject, combineLatest, finalize, takeUntil } from 'rxjs';
 
 @Component({
@@ -24,7 +25,8 @@ import { Subject, combineLatest, finalize, takeUntil } from 'rxjs';
     MatIconModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
-    MatDividerModule
+    MatDividerModule,
+    LogoutButtonComponent
   ],
   templateUrl: './calculated-fluid-balance.component.html',
   styleUrls: ['./calculated-fluid-balance.component.scss']
@@ -33,6 +35,7 @@ export class CalculatedFluidBalanceComponent implements OnInit, OnDestroy {
   displayedColumns = ['date', 'description', 'infused', 'drained', 'ultrafiltration'];
 
   patientId!: number;
+  patientName!: string | null;
   startDate: Date | null = null;
   endDate: Date | null = null;
   summaries: CalculatedFluidBalance[] = [];
@@ -57,12 +60,14 @@ export class CalculatedFluidBalanceComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(([params, query]) => {
         const resolvedId = Number(params.get('patientId'));
+        const patientName = params.get('patientLabel') ?? null;
         if (!Number.isFinite(resolvedId) || resolvedId <= 0) {
           this.openSnack('Paciente no válido.', true);
           this.router.navigate(['/dashboard']);
           return;
         }
         this.patientId = resolvedId;
+        this.patientName = patientName;
         this.startDate = this.parseDate(query.get('startDate'));
         this.endDate = this.parseDate(query.get('endDate'));
         this.loadCalculatedBalance();
@@ -218,7 +223,7 @@ export class CalculatedFluidBalanceComponent implements OnInit, OnDestroy {
   }
 
   private buildPdfFileName(): string {
-    const prefix = `balance-paciente-${this.patientId}`;
+    const prefix = `Balance_${this.patientName ? this.patientName.replace(/\s+/g, '_') : this.patientId}`;
     if (this.startDate && this.endDate) {
       return `${prefix}-${this.formatForFile(this.startDate)}-${this.formatForFile(this.endDate)}.pdf`;
     }

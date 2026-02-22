@@ -6,5 +6,5 @@ import { CalculatedFluidBalanceComponent } from "./patient-detail/calculated-flu
 export const DASHBOARD_ROUTES: Routes = [
   { path: '', component: DashboardComponent },
   { path: 'patient/:patientId', component: PatientDetailComponent },
-  { path: 'patient/:patientId/calculated-balance', component: CalculatedFluidBalanceComponent }
+  { path: 'patient/:patientId/:patientLabel/calculated-balance', component: CalculatedFluidBalanceComponent }
 ];

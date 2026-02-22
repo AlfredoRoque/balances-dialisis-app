@@ -22,6 +22,7 @@ import { FluidDateService } from "../../../core/service/FluidDateService";
 import { ExtraFluidPanelComponent } from "./extra-fluid-panel/extra-fluid-panel.component";
 import { VitalSignDetailPanelComponent } from "./vital-sign-detail-panel/vital-sign-detail-panel.component";
 import { MedicineDetailPanelComponent } from "./medicine-detail-panel/medicine-detail-panel.component";
+import { LogoutButtonComponent } from '../../../shared/components/logout-button/logout-button.component';
 
 interface FluidBalanceRecord extends FluidBalance {
   id?: number;
@@ -55,7 +56,8 @@ interface ActiveSlot {
     ReactiveFormsModule,
     ExtraFluidPanelComponent,
     VitalSignDetailPanelComponent,
-    MedicineDetailPanelComponent
+    MedicineDetailPanelComponent,
+    LogoutButtonComponent
   ],
   templateUrl: './patient-detail.component.html',
   styleUrls: ['./patient-detail.component.scss']
@@ -323,7 +325,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       }
     }
 
-    this.router.navigate(['/dashboard/patient', this.patientId, 'calculated-balance'], extras);
+    this.router.navigate(['/dashboard/patient', this.patientId, this.patientLabel, 'calculated-balance'], extras);
   }
 
   formatBalanceDate24(value: Date | string | null): string {

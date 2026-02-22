@@ -21,6 +21,7 @@ import { VitalSignFormComponent } from "../vital-sign-form/vital-sign-form.compo
 import { MedicineFormComponent } from "../medicine-form/medicine-form.component";
 import { SnackbarService } from "../../../core/service/component/snackbar.service";
 import { Router } from "@angular/router";
+import { LogoutButtonComponent } from '../../../shared/components/logout-button/logout-button.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,7 +38,8 @@ import { Router } from "@angular/router";
     MatSelectModule,
     ReactiveFormsModule,
     VitalSignFormComponent,
-    MedicineFormComponent
+    MedicineFormComponent,
+    LogoutButtonComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -78,9 +80,9 @@ export class DashboardComponent implements AfterViewInit {
     const token = this.authService.getToken();
     if (token) {
       this.decodedToken = this.utility.decodeToken(token);
-      const derivedUserId = Number(this.decodedToken?.jti ?? this.decodedToken?.id ?? this.decodedToken?.sub);
+      const derivedUserId = Number(this.decodedToken?.userId ?? this.decodedToken?.id ?? this.decodedToken?.sub);
       this.currentUserId = Number.isFinite(derivedUserId) ? derivedUserId : null;
-      this.patientService.getPatients(this.decodedToken.jti).subscribe({
+      this.patientService.getPatients(this.decodedToken.userId).subscribe({
         next: (data) => {
           this.patients = data;
           this.refreshTable(true);
@@ -93,10 +95,6 @@ export class DashboardComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
-  }
-
-  logout(): void {
-    this.authService.logout();
   }
 
   startEdit(patient: PatientResponse): void {
