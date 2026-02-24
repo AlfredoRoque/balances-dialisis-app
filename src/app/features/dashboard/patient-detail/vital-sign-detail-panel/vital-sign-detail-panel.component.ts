@@ -315,7 +315,7 @@ export class VitalSignDetailPanelComponent implements OnInit, OnChanges, AfterVi
       patientId: formValue.patientId ?? this.patientId,
       vitalSign: this.buildVitalSignPayload(formValue.vitalSignId),
       value: (formValue.value ?? '').toString().trim(),
-      date: baseDate ? this.toUtcIsoString(baseDate) : null
+      date: baseDate ? baseDate : null
     };
   }
 
@@ -386,19 +386,6 @@ export class VitalSignDetailPanelComponent implements OnInit, OnChanges, AfterVi
     return first.getTime() === second.getTime();
   }
 
-  private toUtcIsoString(date: Date): string {
-    const utcDate = new Date(Date.UTC(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      date.getHours(),
-      date.getMinutes(),
-      0,
-      0
-    ));
-    return utcDate.toISOString();
-  }
-
   private openSnack(message: string, isError = false): void {
     this.snackBar.open(message, 'Cerrar', {
       duration: 4000,
@@ -408,11 +395,11 @@ export class VitalSignDetailPanelComponent implements OnInit, OnChanges, AfterVi
 
   private buildVitalSignPayload(rawId: unknown): VitalSign {
     const id = Number(rawId);
-    const fallback: VitalSign = { name: '' };
+    const fallback: VitalSign = { name: '', userId: 0 };
     if (!Number.isFinite(id)) {
       return fallback;
     }
-    return this.findSignById(id) ?? { id, name: '' };
+    return this.findSignById(id) ?? { id, name: '', userId: 0 };
   }
 
   private findSignById(id: number): VitalSign | undefined {

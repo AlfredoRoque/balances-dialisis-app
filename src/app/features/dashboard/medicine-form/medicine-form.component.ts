@@ -12,6 +12,8 @@ import { finalize } from 'rxjs/operators';
 import { MedicineService } from '../../../core/service/MedicineService';
 import { Medicine } from '../../../shared/models/Medicine';
 import { SnackbarService } from '../../../core/service/component/snackbar.service';
+import { AuthService } from '../../../core/service/AuthService';
+import { Utility } from '../../../core/service/util/utility';
 
 @Component({
   selector: 'app-medicine-form',
@@ -46,12 +48,19 @@ export class MedicineFormComponent implements OnInit, AfterViewInit {
   rowForms: Record<string, FormGroup> = {};
   editingId: number | null = null;
   savingId: number | null = null;
+  decodedToken: any = null;
 
   constructor(
     private fb: FormBuilder,
     private medicineService: MedicineService,
-    private snackBar: SnackbarService
+    private snackBar: SnackbarService,
+     private authService: AuthService,
+     private utility: Utility
   ) {
+    const token = this.authService.getToken();
+    if (token) {
+      this.decodedToken = this.utility.decodeToken(token);
+    }
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(80)]]
     });
@@ -80,7 +89,7 @@ export class MedicineFormComponent implements OnInit, AfterViewInit {
     this.creating = true;
     this.submitError = null;
 
-    const payload: Medicine = { name: trimmedName };
+    const payload: Medicine = { name: trimmedName, userId: this.decodedToken?.userId ?? 0 };
 
     this.medicineService.createMedicine(payload)
       .pipe(finalize(() => this.creating = false))
@@ -138,7 +147,7 @@ export class MedicineFormComponent implements OnInit, AfterViewInit {
     }
 
     this.savingId = id;
-    this.medicineService.updateMedicine(id, { id, name: trimmedName })
+    this.medicineService.updateMedicine(id, { id, name: trimmedName, userId: this.decodedToken?.userId ?? 0 })
       .pipe(finalize(() => this.savingId = null))
       .subscribe({
         next: (updated) => {

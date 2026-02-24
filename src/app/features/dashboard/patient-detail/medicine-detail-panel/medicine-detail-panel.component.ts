@@ -369,11 +369,11 @@ export class MedicineDetailPanelComponent implements OnInit, OnChanges, AfterVie
 
   private buildMedicinePayload(rawId: unknown): Medicine {
     const id = Number(rawId);
-    const fallback: Medicine = { name: '' };
+    const fallback: Medicine = { name: '', userId: 0 };
     if (!Number.isFinite(id)) {
       return fallback;
     }
-    return this.findMedicineById(id) ?? { id, name: '' };
+    return this.findMedicineById(id) ?? { id, name: '', userId: 0 };
   }
 
   private findMedicineById(id: number): Medicine | undefined {
