@@ -8,24 +8,24 @@
 
     <form [formGroup]="form" (ngSubmit)="register()" autocomplete="off">
       <mat-form-field appearance="outline">
-        <mat-label>Usuario</mat-label>
-        <input matInput formControlName="username" placeholder="Ej. usuario@hospital.com">
+        <mat-label class="input-label">Usuario</mat-label>
+        <input matInput class="input-content" formControlName="username" placeholder="Ej. usuario@hospital.com">
         <mat-error *ngIf="form.get('username')?.hasError('required') && form.get('username')?.touched">
           El usuario es obligatorio.
         </mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Contraseña</mat-label>
-        <input matInput type="password" formControlName="password" placeholder="••••••••">
+        <mat-label class="input-label">Contraseña</mat-label>
+        <input matInput class="input-content" type="password" formControlName="password" placeholder="••••••••">
         <mat-error *ngIf="form.get('password')?.hasError('required') && form.get('password')?.touched">
           La contraseña es obligatoria.
         </mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Correo electrónico</mat-label>
-        <input matInput formControlName="email" placeholder="Ej. usuario@hospital.com">
+        <mat-label class="input-label">Correo electrónico</mat-label>
+        <input matInput class="input-content" formControlName="email" placeholder="Ej. usuario@hospital.com">
         <mat-error *ngIf="form.get('email')?.hasError('required') && form.get('email')?.touched">
           El correo electrónico es obligatorio.
         </mat-error>

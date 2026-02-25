@@ -9,13 +9,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { Subject, finalize, takeUntil } from 'rxjs';
 import { ExtraFluid } from '../../../../shared/models/ExtraFluid';
 import { ExtraFluidService } from '../../../../core/service/ExtraFluidService';
+import { SnackbarService } from "../../../../core/service/component/snackbar.service";
 
 interface ExtraFluidRecord extends ExtraFluid {
   id?: number;
@@ -67,7 +68,7 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
   constructor(
     private readonly extraFluidService: ExtraFluidService,
     private readonly fb: FormBuilder,
-    private readonly snackBar: MatSnackBar
+    private readonly snackBar: SnackbarService
   ) {
     this.createForm = this.fb.group({
       date: [new Date(), Validators.required],
@@ -187,17 +188,23 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
       this.openSnack('No pudimos eliminar este registro.', true);
       return;
     }
+    this.snackBar.confirm('¿Seguro que deseas eliminar este registro de líquidos adicionales?')
+      .subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
 
-    this.extraFluidService.deleteExtraFluidBalance(id)
-      .subscribe({
-        next: () => {
-          if (this.editingId === id) {
-            this.editingId = null;
-          }
-          this.openSnack('Registro eliminado.');
-          this.loadRecords();
-        },
-        error: () => this.openSnack('No pudimos eliminar este registro.', true)
+        this.extraFluidService.deleteExtraFluidBalance(id)
+          .subscribe({
+            next: () => {
+              if (this.editingId === id) {
+                this.editingId = null;
+              }
+              this.openSnack('Registro eliminado.');
+              this.loadRecords();
+            },
+            error: () => this.openSnack('No pudimos eliminar este registro.', true)
+          });
       });
   }
 
@@ -345,10 +352,11 @@ export class ExtraFluidPanelComponent implements OnInit, OnChanges, AfterViewIni
   }
 
   private openSnack(message: string, isError = false): void {
-    this.snackBar.open(message, 'Cerrar', {
-      duration: 4000,
-      panelClass: [isError ? 'snackbar-error' : 'snackbar-success']
-    });
+     if (isError) {
+      this.snackBar.openError(message);
+    }else {
+      this.snackBar.openSuccess(message);
+    }
   }
 
   private getRenderedRow(index: number): ExtraFluidRecord | null {

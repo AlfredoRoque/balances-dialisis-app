@@ -167,16 +167,22 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
     if (id == null) {
       return;
     }
+    this.snackBar.confirm(`¿Seguro que deseas eliminar el signo vital "${vitalSign.name}"?`)
+      .subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
 
-    this.vitalSignService.deleteVitalSign(id).subscribe({
-      next: () => {
-        this.removeVitalSignFromTable(id);
-        this.snackBar.openSuccess('Signo vital eliminado exitosamente');
-      },
-      error: () => {
-        this.snackBar.openError('No fue posible eliminar el signo vital. Intenta nuevamente.');
-      }
-    });
+        this.vitalSignService.deleteVitalSign(id).subscribe({
+          next: () => {
+            this.removeVitalSignFromTable(id);
+            this.snackBar.openSuccess('Signo vital eliminado exitosamente');
+          },
+          error: () => {
+            this.snackBar.openError('No fue posible eliminar el signo vital. Intenta nuevamente.');
+          }
+        });
+      });
   }
 
   isEditing(id: number | undefined | null): boolean {

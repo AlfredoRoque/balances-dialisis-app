@@ -177,6 +177,16 @@
     <section class="create-section">
       <h3>Registrar balance</h3>
       <form [formGroup]="createForm" (ngSubmit)="submitCreate()">
+        <mat-form-field appearance="outline">
+          <mat-label class="input-label">Fecha del balance</mat-label>
+          <input matInput [matDatepicker]="slotDayPicker" formControlName="slotDay" class="input-content" [max]="today">
+          <mat-datepicker-toggle matIconSuffix [for]="slotDayPicker"></mat-datepicker-toggle>
+          <mat-datepicker #slotDayPicker></mat-datepicker>
+          <mat-error *ngIf="createForm.get('slotDay')?.invalid && createForm.get('slotDay')?.touched">
+            Selecciona una fecha válida.
+          </mat-error>
+        </mat-form-field>
+
         <mat-form-field appearance="outline" class="full-width">
           <mat-label class="input-label">Horario activo</mat-label>
           <mat-select formControlName="date" placeholder="Selecciona un horario"
@@ -187,7 +197,7 @@
             </mat-option>
           </mat-select>
           <mat-hint *ngIf="!activeDatesLoading && hasActiveDates" align="start">
-            Usa una de las horas habilitadas para hoy.
+            Usa una de las horas habilitadas para la fecha seleccionada.
           </mat-hint>
           <mat-hint *ngIf="!activeDatesLoading && !hasActiveDates" align="start">
             No hay horarios activos disponibles.
@@ -226,7 +236,7 @@
         </p>
 
         <div class="form-actions">
-          <button mat-stroked-button type="button" (click)="createForm.reset()">Limpiar</button>
+          <button mat-stroked-button type="button" (click)="resetCreateForm()">Limpiar</button>
           <button mat-flat-button color="primary" type="submit" [disabled]="createForm.invalid || creating || !hasActiveDates">
             <mat-icon>add</mat-icon>
             {{ creating ? 'Guardando...' : 'Agregar balance' }}

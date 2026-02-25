@@ -167,16 +167,22 @@ export class MedicineFormComponent implements OnInit, AfterViewInit {
     if (id == null) {
       return;
     }
+    this.snackBar.confirm(`¿Seguro que deseas eliminar la medicina "${medicine.name}"?`)
+      .subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
 
-    this.medicineService.deleteMedicine(id).subscribe({
-      next: () => {
-        this.removeMedicineFromTable(id);
-        this.snackBar.openSuccess('Medicina eliminada exitosamente');
-      },
-      error: () => {
-        this.snackBar.openError('No fue posible eliminar la medicina. Intenta nuevamente.');
-      }
-    });
+        this.medicineService.deleteMedicine(id).subscribe({
+          next: () => {
+            this.removeMedicineFromTable(id);
+            this.snackBar.openSuccess('Medicina eliminada exitosamente');
+          },
+          error: () => {
+            this.snackBar.openError('No fue posible eliminar la medicina. Intenta nuevamente.');
+          }
+        });
+      });
   }
 
   isEditing(id: number | undefined | null): boolean {

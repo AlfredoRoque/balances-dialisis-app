@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
@@ -19,6 +19,7 @@ import { MedicineDetail } from '../../../../shared/models/MedicineDetail';
 import { MedicineDetailService } from '../../../../core/service/MedicineDetailService';
 import { Medicine } from '../../../../shared/models/Medicine';
 import { MedicineService } from '../../../../core/service/MedicineService';
+import { SnackbarService } from "../../../../core/service/component/snackbar.service";
 
 interface MedicineDetailRecord extends MedicineDetail {
   id?: number;
@@ -73,7 +74,7 @@ export class MedicineDetailPanelComponent implements OnInit, OnChanges, AfterVie
     private readonly fb: FormBuilder,
     private readonly medicineDetailService: MedicineDetailService,
     private readonly medicineService: MedicineService,
-    private readonly snackBar: MatSnackBar
+    private readonly snackBarService: SnackbarService
   ) {
     this.createForm = this.fb.group({
       date: [new Date(), Validators.required],
@@ -198,17 +199,23 @@ export class MedicineDetailPanelComponent implements OnInit, OnChanges, AfterVie
       this.openSnack('No pudimos eliminar este registro.', true);
       return;
     }
+    this.snackBarService.confirm('¿Seguro que deseas eliminar este registro de medicamento?')
+      .subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
 
-    this.medicineDetailService.deleteMedicineDetail(id)
-      .subscribe({
-        next: () => {
-          if (this.editingId === id) {
-            this.editingId = null;
-          }
-          this.openSnack('Registro eliminado.');
-          this.loadRecords();
-        },
-        error: () => this.openSnack('No pudimos eliminar este registro.', true)
+        this.medicineDetailService.deleteMedicineDetail(id)
+          .subscribe({
+            next: () => {
+              if (this.editingId === id) {
+                this.editingId = null;
+              }
+              this.openSnack('Registro eliminado.');
+              this.loadRecords();
+            },
+            error: () => this.openSnack('No pudimos eliminar este registro.', true)
+          });
       });
   }
 
@@ -381,9 +388,10 @@ export class MedicineDetailPanelComponent implements OnInit, OnChanges, AfterVie
   }
 
   private openSnack(message: string, isError = false): void {
-    this.snackBar.open(message, 'Cerrar', {
-      duration: 4000,
-      panelClass: [isError ? 'snackbar-error' : 'snackbar-success']
-    });
+    if (isError) {
+      this.snackBarService.openError(message);
+    } else {
+      this.snackBarService.openSuccess(message);
+    }
   }
 }

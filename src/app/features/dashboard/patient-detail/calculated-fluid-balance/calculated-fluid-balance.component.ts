@@ -4,7 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,6 +13,7 @@ import { CalculatedFluidBalance } from '../../../../shared/models/CalculatedFlui
 import { FluidBalanceReport } from '../../../../shared/models/FluidBalanceReport';
 import { LogoutButtonComponent } from '../../../../shared/components/logout-button/logout-button.component';
 import { Subject, combineLatest, finalize, takeUntil } from 'rxjs';
+import { SnackbarService } from "../../../../core/service/component/snackbar.service";
 
 @Component({
   selector: 'app-calculated-fluid-balance',
@@ -52,7 +53,7 @@ export class CalculatedFluidBalanceComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly calculatedService: CalculatedFluidBalanceService,
-    private readonly snackBar: MatSnackBar
+    private readonly snackBar: SnackbarService
   ) {}
 
   ngOnInit(): void {
@@ -206,10 +207,11 @@ export class CalculatedFluidBalanceComponent implements OnInit, OnDestroy {
   }
 
   private openSnack(message: string, isError = false): void {
-    this.snackBar.open(message, 'Cerrar', {
-      duration: 4000,
-      panelClass: [isError ? 'snackbar-error' : 'snackbar-success']
-    });
+     if (isError) {
+      this.snackBar.openError(message);
+    }else {
+      this.snackBar.openSuccess(message);
+    }
   }
 
   private triggerDownload(blob: Blob): void {

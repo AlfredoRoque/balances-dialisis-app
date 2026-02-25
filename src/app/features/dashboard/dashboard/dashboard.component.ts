@@ -161,15 +161,22 @@ export class DashboardComponent implements AfterViewInit {
   }
 
   deletePatient(patient: PatientResponse): void {
-    this.patientService.deletePatient(patient.id).subscribe({
-      next: () => {
-        this.removePatientFromTable(patient);
-        this.snackBar.openSuccess('Paciente eliminado exitosamente');
-      },
-      error: () => {
-        this.snackBar.openError('No fue posible eliminar el paciente. Por favor, inténtalo de nuevo.');
-      }
-    });
+    this.snackBar.confirm(`¿Seguro que deseas eliminar al paciente "${patient.name}"?`)
+      .subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
+
+        this.patientService.deletePatient(patient.id).subscribe({
+          next: () => {
+            this.removePatientFromTable(patient);
+            this.snackBar.openSuccess('Paciente eliminado exitosamente');
+          },
+          error: () => {
+            this.snackBar.openError('No fue posible eliminar el paciente. Por favor, inténtalo de nuevo.');
+          }
+        });
+      });
   }
 
   viewPatientDetail(patient: PatientResponse): void {

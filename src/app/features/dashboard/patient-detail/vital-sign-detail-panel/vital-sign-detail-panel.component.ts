@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
@@ -19,6 +19,7 @@ import { VitalSignDetail } from '../../../../shared/models/VitalSignDetail';
 import { VitalSignDetailService } from '../../../../core/service/VitalSignDetailService';
 import { VitalSign } from '../../../../shared/models/VitalSign';
 import { VitalSignService } from '../../../../core/service/VitalSignService';
+import { SnackbarService } from "../../../../core/service/component/snackbar.service";
 
 interface VitalSignDetailRecord extends VitalSignDetail {
   id?: number;
@@ -75,7 +76,7 @@ export class VitalSignDetailPanelComponent implements OnInit, OnChanges, AfterVi
     private readonly fb: FormBuilder,
     private readonly vitalSignDetailService: VitalSignDetailService,
     private readonly vitalSignService: VitalSignService,
-    private readonly snackBar: MatSnackBar
+    private readonly snackBar: SnackbarService
   ) {
     this.createForm = this.fb.group({
       date: [new Date(), Validators.required],
@@ -210,17 +211,23 @@ export class VitalSignDetailPanelComponent implements OnInit, OnChanges, AfterVi
       this.openSnack('No pudimos eliminar este registro.', true);
       return;
     }
+    this.snackBar.confirm('¿Seguro que deseas eliminar este signo vital registrado?')
+      .subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
 
-    this.vitalSignDetailService.deleteVitalSignDetail(id)
-      .subscribe({
-        next: () => {
-          if (this.editingId === id) {
-            this.editingId = null;
-          }
-          this.openSnack('Registro eliminado.');
-          this.loadRecords();
-        },
-        error: () => this.openSnack('No pudimos eliminar este registro.', true)
+        this.vitalSignDetailService.deleteVitalSignDetail(id)
+          .subscribe({
+            next: () => {
+              if (this.editingId === id) {
+                this.editingId = null;
+              }
+              this.openSnack('Registro eliminado.');
+              this.loadRecords();
+            },
+            error: () => this.openSnack('No pudimos eliminar este registro.', true)
+          });
       });
   }
 
@@ -387,10 +394,11 @@ export class VitalSignDetailPanelComponent implements OnInit, OnChanges, AfterVi
   }
 
   private openSnack(message: string, isError = false): void {
-    this.snackBar.open(message, 'Cerrar', {
-      duration: 4000,
-      panelClass: [isError ? 'snackbar-error' : 'snackbar-success']
-    });
+     if (isError) {
+      this.snackBar.openError(message);
+    }else {
+      this.snackBar.openSuccess(message);
+    }
   }
 
   private buildVitalSignPayload(rawId: unknown): VitalSign {

@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSelectModule } from '@angular/material/select';
@@ -23,6 +23,7 @@ import { ExtraFluidPanelComponent } from "./extra-fluid-panel/extra-fluid-panel.
 import { VitalSignDetailPanelComponent } from "./vital-sign-detail-panel/vital-sign-detail-panel.component";
 import { MedicineDetailPanelComponent } from "./medicine-detail-panel/medicine-detail-panel.component";
 import { LogoutButtonComponent } from '../../../shared/components/logout-button/logout-button.component';
+import { SnackbarService } from "../../../core/service/component/snackbar.service";
 
 interface FluidBalanceRecord extends FluidBalance {
   id?: number;
@@ -82,6 +83,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   activeDatesLoading = false;
   activeSlots: ActiveSlot[] = [];
   private activeTimeStrings: string[] = [];
+  readonly today = this.buildToday();
 
   private destroy$ = new Subject<void>();
 
@@ -91,7 +93,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     private readonly fb: FormBuilder,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly snackBar: MatSnackBar,
+    private readonly snackBar: SnackbarService,
     private readonly fluidBalanceService: FluidBalanceService,
     private readonly fluidDateService: FluidDateService
   ) {
@@ -101,6 +103,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     });
 
     this.createForm = this.fb.group({
+      slotDay: [this.buildToday(), Validators.required],
       date: [null, Validators.required],
       infused: [null, [Validators.required, Validators.min(0)]],
       drained: [null, [Validators.required, Validators.min(0)]],
@@ -115,6 +118,9 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     });
 
     this.createForm.get('date')?.disable({ emitEvent: false });
+    this.createForm.get('slotDay')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => this.onSlotDayChange(value));
   }
 
   get hasActiveDates(): boolean {
@@ -229,13 +235,25 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       .subscribe({
         next: () => {
           this.openSnack('Balance agregado correctamente');
-          this.createForm.reset();
-          this.updateCreateDateControlState();
+          this.resetCreateForm();
           this.loadActiveDates();
           this.loadBalances();
         },
         error: () => this.openSnack('No pudimos agregar el balance.', true)
       });
+  }
+
+  resetCreateForm(): void {
+    this.createForm.reset({
+      slotDay: this.buildToday(),
+      date: null,
+      infused: null,
+      drained: null,
+      descriptionFluid: ''
+    });
+    this.createForm.get('date')?.disable({ emitEvent: false });
+    this.refreshSlotsForCurrentDay();
+    this.updateCreateDateControlState();
   }
 
   startEdit(balance: FluidBalanceRecord): void {
@@ -291,13 +309,19 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       this.openSnack('No pudimos eliminar este registro.', true);
       return;
     }
-    this.fluidBalanceService.deleteFluidBalance(balanceId)
-      .subscribe({
-        next: () => {
-          this.openSnack('Balance eliminado.');
-          this.loadBalances();
-        },
-        error: () => this.openSnack('No pudimos eliminar el balance.', true)
+    this.snackBar.confirm('¿Seguro que deseas eliminar este balance?')
+      .subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
+        this.fluidBalanceService.deleteFluidBalance(balanceId)
+          .subscribe({
+            next: () => {
+              this.openSnack('Balance eliminado.');
+              this.loadBalances();
+            },
+            error: () => this.openSnack('No pudimos eliminar el balance.', true)
+          });
       });
   }
 
@@ -350,7 +374,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   private setActiveDates(times: string[]): void {
     this.activeTimeStrings = [...times];
     const previousValue = this.createForm.get('date')?.value ?? null;
-    this.activeSlots = this.buildSlotsForDate(new Date());
+    this.refreshSlotsForCurrentDay();
     this.updateCreateDateControlState(previousValue);
   }
 
@@ -380,6 +404,9 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private buildSlotsForDate(baseDate: Date): ActiveSlot[] {
+    if (!this.activeTimeStrings.length) {
+      return [];
+    }
     return this.activeTimeStrings
       .map(time => this.composeSlot(baseDate, time))
       .filter((slot): slot is ActiveSlot => !!slot)
@@ -488,10 +515,11 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private openSnack(message: string, isError = false): void {
-    this.snackBar.open(message, 'Cerrar', {
-      duration: 4000,
-      panelClass: [isError ? 'snackbar-error' : 'snackbar-success']
-    });
+    if (isError) {
+      this.snackBar.openError(message);
+    }else {
+      this.snackBar.openSuccess(message);
+    }
   }
 
   private buildSlotsForDateFromValue(value: Date | string | null): ActiveSlot[] {
@@ -500,6 +528,22 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       return [];
     }
     return this.buildSlotsForDate(date);
+  }
+
+  private onSlotDayChange(raw: unknown): void {
+    this.refreshSlotsForCurrentDay();
+    this.updateCreateDateControlState(this.createForm.get('date')?.value ?? null);
+  }
+
+  private refreshSlotsForCurrentDay(): void {
+    const selectedDay = this.normalizeToDate(this.createForm.get('slotDay')?.value) ?? this.buildToday();
+    this.activeSlots = this.buildSlotsForDate(selectedDay);
+  }
+
+  private buildToday(): Date {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
   }
 
   private getRenderedRow(index: number): FluidBalanceRecord | null {

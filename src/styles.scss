@@ -19,6 +19,10 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   border: 3px solid rgba(12, 125, 218, 0.95);
   border-radius: 999px;
 }
+.snackbar-confirm {
+  border: 3px solid rgba(249, 115, 22, 0.95);
+  border-radius: 999px;
+}
 .mat-mdc-simple-snack-bar {
   background: linear-gradient(120deg, rgba(43, 25, 49, 0.92), rgba(28, 24, 118, 0.92));
   color: white;
