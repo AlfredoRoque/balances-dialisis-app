@@ -241,7 +241,9 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
           this.loadActiveDates();
           this.loadBalances();
         },
-        error: () => this.openSnack('No pudimos agregar el balance.', true)
+        error: (error) => {
+          this.openSnack(`${error.error?.message ?? 'No pudimos agregar el balance.'}`, true);
+        }
       });
   }
 
