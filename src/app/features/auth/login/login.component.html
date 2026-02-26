@@ -1,0 +1,36 @@
+<section class="login-shell">
+  <mat-card class="login-card">
+    <header>
+      <p class="eyebrow">Bienvenido</p>
+      <h1>Inicia sesión</h1>
+      <p class="subtitle">Accede al panel para gestionar balances y sesiones.</p>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="login()" autocomplete="off">
+      <mat-form-field appearance="outline">
+        <mat-label class="input-label">Usuario</mat-label>
+        <input matInput formControlName="username" placeholder="Ej. user123" class="input-content">
+        <mat-error *ngIf="form.get('username')?.hasError('required') && form.get('username')?.touched">
+          El usuario es obligatorio.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label class="input-label">Contraseña</mat-label>
+        <input matInput type="password" formControlName="password" placeholder="••••••••" class="input-content">
+        <mat-error *ngIf="form.get('password')?.hasError('required') && form.get('password')?.touched">
+          La contraseña es obligatoria.
+        </mat-error>
+      </mat-form-field>
+
+      <div class="actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Entrar</button>
+        <button mat-button type="button" (click)="register()">Crear cuenta</button>
+      </div>
+
+      <button class="recover-link" mat-button type="button" (click)="goToRecover()">
+        ¿Olvidaste tu contraseña?
+      </button>
+    </form>
+  </mat-card>
+</section>

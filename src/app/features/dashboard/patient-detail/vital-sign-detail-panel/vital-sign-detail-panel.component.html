@@ -1,0 +1,171 @@
+<section class="vitals-shell">
+  <mat-card class="vitals-card">
+    <header class="card-head">
+      <div>
+        <p class="eyebrow">Signos vitales</p>
+        <h2>Registro detallado de signos</h2>
+        <p class="subtitle">Asocia lecturas puntuales por paciente y fecha.</p>
+      </div>
+      <button mat-stroked-button color="accent" type="button" (click)="loadRecords()" [disabled]="loading">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
+    </header>
+
+    <section class="table-section" *ngIf="!loading; else loadingState">
+      <table mat-table [dataSource]="dataSource" class="sign-table">
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Fecha</th>
+          <td mat-cell *matCellDef="let record">
+            <ng-container *ngIf="isEditing(record) && getRowForm(record) as rowForm; else dateView">
+              <div class="inline-edit" [formGroup]="rowForm">
+                <mat-form-field appearance="outline" class="inline-field">
+                  <mat-label>Fecha</mat-label>
+                  <input matInput [matDatepicker]="rowPicker" formControlName="date">
+                  <mat-datepicker-toggle matIconSuffix [for]="rowPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #rowPicker></mat-datepicker>
+                  <mat-error *ngIf="rowForm.get('date')?.invalid && rowForm.get('date')?.touched">
+                    Selecciona una fecha válida.
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </ng-container>
+            <ng-template #dateView>
+              {{ formatRecordDate(record.date) }}
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="vitalSign">
+          <th mat-header-cell *matHeaderCellDef>Signo vital</th>
+          <td mat-cell *matCellDef="let record">
+            <ng-container *ngIf="isEditing(record) && getRowForm(record) as rowForm; else vitalView">
+              <div class="inline-edit" [formGroup]="rowForm">
+                <mat-form-field appearance="outline" class="inline-field">
+                  <mat-label>Signo</mat-label>
+                  <mat-select formControlName="vitalSignId" [disabled]="vitalSignsLoading || !vitalSigns.length">
+                    <mat-option *ngIf="vitalSignsLoading" disabled>Cargando signos...</mat-option>
+                    <mat-option *ngFor="let sign of vitalSigns" [value]="sign.id">{{ sign.name }}</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="rowForm.get('vitalSignId')?.invalid && rowForm.get('vitalSignId')?.touched">
+                    Selecciona un signo vital.
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </ng-container>
+            <ng-template #vitalView>
+              {{ getVitalSignLabel(record) }}
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="value">
+          <th mat-header-cell *matHeaderCellDef>Valor</th>
+          <td mat-cell *matCellDef="let record">
+            <ng-container *ngIf="isEditing(record) && getRowForm(record) as rowForm; else valueView">
+              <div class="inline-edit" [formGroup]="rowForm">
+                <mat-form-field appearance="outline" class="inline-field">
+                  <mat-label>Valor</mat-label>
+                  <input matInput formControlName="value" maxlength="120">
+                  <mat-error *ngIf="rowForm.get('value')?.invalid && rowForm.get('value')?.touched">
+                    Ingresa un valor válido.
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </ng-container>
+            <ng-template #valueView>
+              {{ record.value || 'Sin valor' }}
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="actions-header">Acciones</th>
+          <td mat-cell *matCellDef="let record" class="actions-cell">
+            <ng-container *ngIf="isEditing(record); else defaultActions">
+              <button mat-icon-button color="primary" aria-label="Guardar" (click)="saveRecord(record)"
+                      [disabled]="getRowForm(record)?.invalid || savingId === editingId">
+                <mat-icon>check</mat-icon>
+              </button>
+              <button mat-icon-button aria-label="Cancelar" (click)="cancelEdit(record)" [disabled]="savingId === editingId">
+                <mat-icon>close</mat-icon>
+              </button>
+            </ng-container>
+            <ng-template #defaultActions>
+              <button mat-icon-button color="primary" aria-label="Editar" (click)="startEdit(record)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" aria-label="Eliminar" (click)="deleteRecord(record)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; let i = index; columns: displayedColumns;"
+            [class.date-divider]="shouldShowDateDivider(i)"></tr>
+      </table>
+      <mat-paginator [pageSize]="5" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+    </section>
+
+    <ng-template #loadingState>
+      <div class="loading-state">
+        <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+        <p>Cargando registros...</p>
+      </div>
+    </ng-template>
+
+    <mat-divider></mat-divider>
+
+    <section class="create-section">
+      <header>
+        <h3>Agregar signo vital</h3>
+        <p>Registra una nueva lectura para este paciente.</p>
+      </header>
+      <form [formGroup]="createForm" (ngSubmit)="submitCreate()">
+        <mat-form-field appearance="outline">
+          <mat-label class="input-label">Fecha</mat-label>
+          <input matInput [matDatepicker]="createPicker" formControlName="date" class="input-content">
+          <mat-datepicker-toggle matIconSuffix [for]="createPicker"></mat-datepicker-toggle>
+          <mat-datepicker #createPicker></mat-datepicker>
+          <mat-error *ngIf="createForm.get('date')?.invalid && createForm.get('date')?.touched">
+            Selecciona una fecha válida.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label class="input-label">Signo vital</mat-label>
+          <mat-select formControlName="vitalSignId" [disabled]="vitalSignsLoading || !vitalSigns.length" class="input-content">
+            <mat-option *ngIf="vitalSignsLoading" disabled>Cargando signos...</mat-option>
+            <mat-option *ngFor="let sign of vitalSigns" [value]="sign.id">{{ sign.name }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="createForm.get('vitalSignId')?.invalid && createForm.get('vitalSignId')?.touched">
+            Selecciona un signo vital.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label class="input-label">Valor</mat-label>
+          <input matInput formControlName="value" maxlength="120" class="input-content">
+          <mat-error *ngIf="createForm.get('value')?.invalid && createForm.get('value')?.touched">
+            Ingresa un valor válido.
+          </mat-error>
+        </mat-form-field>
+
+        <p class="no-signs" *ngIf="!vitalSignsLoading && !vitalSigns.length">
+          Agrega signos vitales en el módulo correspondiente para habilitar esta sección.
+        </p>
+
+        <div class="form-actions">
+          <button mat-stroked-button type="button" (click)="resetCreateForm()">
+            Limpiar
+          </button>
+          <button mat-flat-button color="primary" type="submit" [disabled]="createForm.invalid || creating || !vitalSigns.length">
+            {{ creating ? 'Guardando...' : 'Agregar registro' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </mat-card>
+</section>

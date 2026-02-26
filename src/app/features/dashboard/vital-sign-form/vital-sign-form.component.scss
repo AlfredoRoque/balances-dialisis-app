@@ -1,0 +1,213 @@
+:host {
+    display: block;
+}
+
+.vital-card {
+    margin: 0 auto;
+    max-width: 1180px;
+    padding: 2rem 2.5rem;
+    border-radius: 1.5rem;
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 30px 70px rgba(2, 6, 23, 0.65);
+    color: #e2e8f0;
+}
+
+.card-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1.5rem;
+
+    .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.28em;
+        font-size: 0.75rem;
+        color: rgba(226, 232, 240, 0.65);
+        margin: 0;
+    }
+
+    h2 {
+        margin: 0;
+        font-size: 1.4rem;
+    }
+
+    .subtitle {
+        margin: 0;
+        color: rgba(226, 232, 240, 0.75);
+    }
+}
+
+mat-form-field {
+    :host {
+        display: block;
+    }
+
+    .vital-card {
+        margin: 0 auto;
+        max-width: 1180px;
+        padding: 2rem 2.5rem;
+        border-radius: 1.5rem;
+        background: rgba(2, 6, 23, 0.85);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 30px 70px rgba(2, 6, 23, 0.65);
+        color: #e2e8f0;
+    }
+
+    .card-head {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        margin-bottom: 1.5rem;
+
+        .eyebrow {
+            text-transform: uppercase;
+            letter-spacing: 0.28em;
+            font-size: 0.75rem;
+            color: rgba(226, 232, 240, 0.65);
+            margin: 0;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: rgba(226, 232, 240, 0.75);
+        }
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        margin-bottom: 1.5rem;
+    }
+
+    .vital-table {
+        width: 100%;
+        min-width: 480px;
+
+        th {
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: #0f172a;
+        }
+
+        td {
+            color: #0f172a;
+        }
+
+        .inline-edit {
+            width: 100%;
+
+            .inline-field {
+                width: 100%;
+                margin: 0;
+            }
+        }
+
+        .cell-main {
+            .name {
+                font-weight: 600;
+                color: #0f172a;
+            }
+        }
+
+        .actions-header,
+        .actions-cell {
+            text-align: right;
+        }
+
+        .actions-cell button+button {
+            margin-left: 0.25rem;
+        }
+    }
+
+    .table-empty {
+        margin: 1rem 0 0;
+        color: rgba(226, 232, 240, 0.75);
+    }
+
+    mat-paginator {
+        margin-bottom: 1.5rem;
+        color: #0f172a;
+    }
+
+    .card-footer {
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(148, 163, 184, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+
+        .footer-info {
+            h3 {
+                margin: 0;
+            }
+
+            p {
+                margin: 0;
+                color: rgba(226, 232, 240, 0.65);
+            }
+        }
+    }
+
+    .vital-form {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+
+        mat-form-field {
+            width: 100%;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+
+            button {
+                align-self: flex-start;
+            }
+
+            .submit-error {
+                margin: 0;
+                font-size: 0.85rem;
+                color: #f87171;
+            }
+        }
+    }
+
+    .input-label {
+        color: white;
+        opacity: 0.55;
+    }
+
+    .input-content {
+        color: white;
+    }
+
+    @media (min-width: 720px) {
+        .card-footer {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .vital-form {
+            grid-template-columns: minmax(0, 420px) auto;
+            align-items: end;
+
+            .form-actions {
+                flex-direction: row;
+                align-items: center;
+                gap: 1rem;
+
+                button {
+                    align-self: center;
+                }
+            }
+        }
+    }
+}

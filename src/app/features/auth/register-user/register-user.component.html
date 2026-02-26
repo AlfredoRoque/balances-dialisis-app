@@ -1,0 +1,40 @@
+<section class="register-shell">
+  <mat-card class="register-card">
+    <header>
+      <p class="eyebrow">Crear usuario</p>
+      <h1>Registra un nuevo acceso</h1>
+      <p class="subtitle">Define credenciales y datos básicos para ingresar al sistema.</p>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="register()" autocomplete="off">
+      <mat-form-field appearance="outline">
+        <mat-label class="input-label">Usuario</mat-label>
+        <input matInput class="input-content" formControlName="username" placeholder="Ej. usuario@hospital.com">
+        <mat-error *ngIf="form.get('username')?.hasError('required') && form.get('username')?.touched">
+          El usuario es obligatorio.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label class="input-label">Contraseña</mat-label>
+        <input matInput class="input-content" type="password" formControlName="password" placeholder="••••••••">
+        <mat-error *ngIf="form.get('password')?.hasError('required') && form.get('password')?.touched">
+          La contraseña es obligatoria.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label class="input-label">Correo electrónico</mat-label>
+        <input matInput class="input-content" formControlName="email" placeholder="Ej. usuario@hospital.com">
+        <mat-error *ngIf="form.get('email')?.hasError('required') && form.get('email')?.touched">
+          El correo electrónico es obligatorio.
+        </mat-error>
+      </mat-form-field>
+
+      <div class="actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Guardar</button>
+        <button mat-button type="button" (click)="goToLogin()">Volver al login</button>
+      </div>
+    </form>
+  </mat-card>
+</section>

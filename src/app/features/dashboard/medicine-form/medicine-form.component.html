@@ -1,0 +1,87 @@
+<mat-card class="medicine-card">
+  <header class="card-head">
+    <div>
+      <h2>Medicamentos disponibles</h2>
+      <p class="subtitle">Gestiona los fármacos que se pueden prescribir en las sesiones.</p>
+    </div>
+  </header>
+
+  <section class="table-wrapper">
+    <table mat-table [dataSource]="dataSource" class="medicine-table">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Medicamento</th>
+        <td mat-cell *matCellDef="let med">
+          <ng-container *ngIf="isEditing(med.id) && getRowForm(med.id) as form; else nameView">
+            <div class="inline-edit" [formGroup]="form">
+              <mat-form-field appearance="outline" class="inline-field">
+                <mat-label>Nombre</mat-label>
+                <input matInput formControlName="name" placeholder="Ej. Heparina">
+                <mat-error *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
+                  Ingresa un nombre válido (máx. 80 caracteres).
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </ng-container>
+          <ng-template #nameView>
+            <div class="cell-main">
+              <span class="name">{{ med.name }}</span>
+            </div>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef class="actions-header">Acciones</th>
+        <td mat-cell *matCellDef="let med" class="actions-cell">
+          <ng-container *ngIf="isEditing(med.id); else defaultMedicineActions">
+            <button mat-icon-button color="primary" aria-label="Guardar cambios" (click)="save(med)" [disabled]="savingId === med.id">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button aria-label="Cancelar edición" (click)="cancelEdit(med)" [disabled]="savingId === med.id">
+              <mat-icon>close</mat-icon>
+            </button>
+          </ng-container>
+          <ng-template #defaultMedicineActions>
+            <button mat-icon-button color="primary" aria-label="Editar medicamento" (click)="startEdit(med)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" aria-label="Eliminar medicamento" (click)="delete(med)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+    <p class="table-empty" *ngIf="!loading && !dataSource.data.length">No hay medicamentos registrados.</p>
+  </section>
+
+  <mat-paginator [pageSize]="5" [pageSizeOptions]="[5]" showFirstLastButtons></mat-paginator>
+
+  <section class="card-footer">
+    <div class="footer-info">
+      <h3>Agregar nuevo medicamento</h3>
+      <p>Mantén el catálogo actualizado para que el personal pueda seleccionarlos con rapidez.</p>
+    </div>
+
+    <form class="medicine-form" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline">
+        <mat-label class="input-label">Nombre del medicamento</mat-label>
+        <input matInput formControlName="name" placeholder="Ej. Heparina" class="input-content">
+        <mat-error *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
+          Ingresa un nombre válido (máx. 80 caracteres).
+        </mat-error>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-flat-button color="accent" type="submit" [disabled]="creating">
+          <mat-icon>{{ creating ? 'hourglass_top' : 'medication' }}</mat-icon>
+          {{ creating ? 'Registrando...' : 'Registrar medicamento' }}
+        </button>
+        <p class="submit-error" *ngIf="submitError">{{ submitError }}</p>
+      </div>
+    </form>
+  </section>
+</mat-card>

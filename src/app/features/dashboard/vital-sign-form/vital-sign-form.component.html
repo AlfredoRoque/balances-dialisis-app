@@ -1,0 +1,87 @@
+<mat-card class="vital-card">
+  <header class="card-head">
+    <div>
+      <h2>Signos vitales disponibles</h2>
+      <p class="subtitle">Administra los registros que se usan en las sesiones de monitoreo.</p>
+    </div>
+  </header>
+
+  <section class="table-wrapper">
+    <table mat-table [dataSource]="dataSource" class="vital-table">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Signo vital</th>
+        <td mat-cell *matCellDef="let sign">
+          <ng-container *ngIf="isEditing(sign.id) && getRowForm(sign.id) as form; else nameView">
+            <div class="inline-edit" [formGroup]="form">
+              <mat-form-field appearance="outline" class="inline-field">
+                <mat-label>Nombre</mat-label>
+                <input matInput formControlName="name" placeholder="Ej. Saturación de oxígeno">
+                <mat-error *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
+                  Ingresa un nombre válido (máx. 80 caracteres).
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </ng-container>
+          <ng-template #nameView>
+            <div class="cell-main">
+              <span class="name">{{ sign.name }}</span>
+            </div>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef class="actions-header">Acciones</th>
+        <td mat-cell *matCellDef="let sign" class="actions-cell">
+          <ng-container *ngIf="isEditing(sign.id); else defaultVitalActions">
+            <button mat-icon-button color="primary" aria-label="Guardar cambios" (click)="save(sign)" [disabled]="savingId === sign.id">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button aria-label="Cancelar edición" (click)="cancelEdit(sign)" [disabled]="savingId === sign.id">
+              <mat-icon>close</mat-icon>
+            </button>
+          </ng-container>
+          <ng-template #defaultVitalActions>
+            <button mat-icon-button color="primary" aria-label="Editar signo vital" (click)="startEdit(sign)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" aria-label="Eliminar signo vital" (click)="delete(sign)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+    <p class="table-empty" *ngIf="!loading && !dataSource.data.length">No hay signos vitales registrados.</p>
+  </section>
+
+  <mat-paginator [pageSize]="5" [pageSizeOptions]="[5]" showFirstLastButtons></mat-paginator>
+
+  <section class="card-footer">
+    <div class="footer-info">
+      <h3>Agregar nuevo signo vital</h3>
+      <p>Mantén el registro actualizado para que el equipo pueda seleccionarlos rápidamente.</p>
+    </div>
+
+    <form class="vital-form" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline">
+        <mat-label class="input-label">Nombre del signo vital</mat-label>
+        <input matInput formControlName="name" placeholder="Ej. Presión arterial" class="input-content">
+        <mat-error *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
+          Ingresa un nombre válido (máx. 80 caracteres).
+        </mat-error>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-flat-button color="accent" type="submit" [disabled]="creating">
+          <mat-icon>{{ creating ? 'hourglass_top' : 'monitor_heart' }}</mat-icon>
+          {{ creating ? 'Registrando...' : 'Registrar signo' }}
+        </button>
+        <p class="submit-error" *ngIf="submitError">{{ submitError }}</p>
+      </div>
+    </form>
+  </section>
+</mat-card>
