@@ -6,9 +6,11 @@ import { CalculatedFluidBalance } from "../../shared/models/CalculatedFluidBalan
 @Injectable({ providedIn: 'root' })
 export class CalculatedFluidBalanceService {
 
-  private API = 'http://localhost:8082/api/fluid-balances';
+  private API = '';
 
-  constructor(private http: HttpClient, private utility: Utility) {}
+  constructor(private http: HttpClient, private utility: Utility) {
+    this.API = `${this.utility.getHostUrl()}/api/fluid-balances`;
+  }
 
   getFluidBalancesByDates(patientId: number, startDate?: Date | null, endDate?: Date | null) {
     const params: Record<string, string> = {};

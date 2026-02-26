@@ -12,6 +12,7 @@ import { CalculatedFluidBalanceService } from '../../../../core/service/Calculat
 import { CalculatedFluidBalance } from '../../../../shared/models/CalculatedFluidBalance';
 import { FluidBalanceReport } from '../../../../shared/models/FluidBalanceReport';
 import { LogoutButtonComponent } from '../../../../shared/components/logout-button/logout-button.component';
+import { UpdatePasswordButtonComponent } from '../../../../shared/components/update-password-button/update-password-button.component';
 import { Subject, combineLatest, finalize, takeUntil } from 'rxjs';
 import { SnackbarService } from "../../../../core/service/component/snackbar.service";
 
@@ -27,7 +28,8 @@ import { SnackbarService } from "../../../../core/service/component/snackbar.ser
     MatSnackBarModule,
     MatProgressSpinnerModule,
     MatDividerModule,
-    LogoutButtonComponent
+    LogoutButtonComponent,
+    UpdatePasswordButtonComponent
   ],
   templateUrl: './calculated-fluid-balance.component.html',
   styleUrls: ['./calculated-fluid-balance.component.scss']

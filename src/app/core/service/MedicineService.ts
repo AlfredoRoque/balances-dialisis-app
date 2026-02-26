@@ -1,13 +1,16 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Medicine } from "../../shared/models/Medicine";
+import { Utility } from "./util/utility";
 
 @Injectable({ providedIn: 'root' })
 export class MedicineService {
 
-  private API = 'http://localhost:8082/api/medicines';
+  private API = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private utility: Utility) {
+    this.API = `${this.utility.getHostUrl()}/api/medicines`;
+  }
 
   getMedicines() {
     return this.http.get<Medicine[]>(`${this.API}`);

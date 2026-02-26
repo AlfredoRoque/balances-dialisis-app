@@ -22,6 +22,7 @@ import { MedicineFormComponent } from "../medicine-form/medicine-form.component"
 import { SnackbarService } from "../../../core/service/component/snackbar.service";
 import { Router } from "@angular/router";
 import { LogoutButtonComponent } from '../../../shared/components/logout-button/logout-button.component';
+import { UpdatePasswordButtonComponent } from '../../../shared/components/update-password-button/update-password-button.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -39,7 +40,8 @@ import { LogoutButtonComponent } from '../../../shared/components/logout-button/
     ReactiveFormsModule,
     VitalSignFormComponent,
     MedicineFormComponent,
-    LogoutButtonComponent
+    LogoutButtonComponent,
+    UpdatePasswordButtonComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']

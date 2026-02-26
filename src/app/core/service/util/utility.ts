@@ -20,4 +20,7 @@ export class Utility {
         return today;
     }
 
+    getHostUrl(): string {
+        return 'https://api-sistema-ecuaciones-production-3ffb.up.railway.app';
+    }
 }

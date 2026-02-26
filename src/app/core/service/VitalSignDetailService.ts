@@ -6,9 +6,11 @@ import { Utility } from "./util/utility";
 @Injectable({ providedIn: 'root' })
 export class VitalSignDetailService {
 
-  private API = 'http://localhost:8082/api/vital-signs/details';
+  private API = '';
 
-  constructor(private http: HttpClient, private utility: Utility) {}
+  constructor(private http: HttpClient, private utility: Utility) {
+    this.API = `${this.utility.getHostUrl()}/api/vital-signs/details`;
+  }
 
   createVitalSignDetail(payload: VitalSignDetail) {
     return this.http.post<VitalSignDetail>(`${this.API}/save`, payload);

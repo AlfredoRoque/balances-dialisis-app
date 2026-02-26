@@ -6,9 +6,11 @@ import { Utility } from "./util/utility";
 @Injectable({ providedIn: 'root' })
 export class FluidBalanceService {
 
-  private API = 'http://localhost:8082/api/fluid-balances';
+  private API = '';
 
-  constructor(private http: HttpClient, private utility: Utility) {}
+  constructor(private http: HttpClient, private utility: Utility) {
+    this.API = `${this.utility.getHostUrl()}/api/fluid-balances`;
+  }
 
   getFluidBalances(patientId: number) {
     return this.http.get<FluidBalance[]>(`${this.API}/dates`, {

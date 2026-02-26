@@ -23,6 +23,7 @@ import { ExtraFluidPanelComponent } from "./extra-fluid-panel/extra-fluid-panel.
 import { VitalSignDetailPanelComponent } from "./vital-sign-detail-panel/vital-sign-detail-panel.component";
 import { MedicineDetailPanelComponent } from "./medicine-detail-panel/medicine-detail-panel.component";
 import { LogoutButtonComponent } from '../../../shared/components/logout-button/logout-button.component';
+import { UpdatePasswordButtonComponent } from '../../../shared/components/update-password-button/update-password-button.component';
 import { SnackbarService } from "../../../core/service/component/snackbar.service";
 
 interface FluidBalanceRecord extends FluidBalance {
@@ -58,7 +59,8 @@ interface ActiveSlot {
     ExtraFluidPanelComponent,
     VitalSignDetailPanelComponent,
     MedicineDetailPanelComponent,
-    LogoutButtonComponent
+    LogoutButtonComponent,
+    UpdatePasswordButtonComponent
   ],
   templateUrl: './patient-detail.component.html',
   styleUrls: ['./patient-detail.component.scss']

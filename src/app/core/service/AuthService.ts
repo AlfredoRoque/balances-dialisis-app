@@ -3,14 +3,17 @@ import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
 import { SessionTimerService } from "./session-timer.service";
 import { Observable, finalize } from 'rxjs';
+import { Utility } from "./util/utility";
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private API = 'http://localhost:8082/api/auth';
+  private API = '';
   private sessionExpiredNotified = false;
 
-  constructor(private http: HttpClient,private router: Router,private sessionTimer: SessionTimerService) {}
+  constructor(private http: HttpClient,private router: Router,private sessionTimer: SessionTimerService,private utility: Utility) {
+    this.API = `${this.utility.getHostUrl()}/api/auth`;
+  }
 
   login(data: { username: string; password: string },timeZone: string) {
     return this.http.post<any>(`${this.API}/login`, { ...data, timeZone });

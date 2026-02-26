@@ -32,6 +32,13 @@ export const routes: Routes = [
         .then(m => m.DASHBOARD_ROUTES)
   },
   {
+    path: 'update-password',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/auth/update-password/update-password.routes')
+        .then(m => m.UPDATE_PASSWORD_ROUTES)
+  },
+  {
     path: '',
     redirectTo: 'login',
     pathMatch: 'full'

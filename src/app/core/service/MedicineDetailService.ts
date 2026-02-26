@@ -1,13 +1,16 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { MedicineDetail } from "../../shared/models/MedicineDetail";
+import { Utility } from "./util/utility";
 
 @Injectable({ providedIn: 'root' })
 export class MedicineDetailService {
 
-  private API = 'http://localhost:8082/api/medicines/details';
+  private API = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private utility: Utility) {
+    this.API = `${this.utility.getHostUrl()}/api/medicines/details`;
+  }
 
   createMedicineDetail(payload: MedicineDetail) {
     return this.http.post<MedicineDetail>(`${this.API}/save`, payload);

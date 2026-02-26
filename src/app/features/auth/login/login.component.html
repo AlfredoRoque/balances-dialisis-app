@@ -9,7 +9,7 @@
     <form [formGroup]="form" (ngSubmit)="login()" autocomplete="off">
       <mat-form-field appearance="outline">
         <mat-label class="input-label">Usuario</mat-label>
-        <input matInput formControlName="username" placeholder="Ej. usuario@hospital.com" class="input-content">
+        <input matInput formControlName="username" placeholder="Ej. user123" class="input-content">
         <mat-error *ngIf="form.get('username')?.hasError('required') && form.get('username')?.touched">
           El usuario es obligatorio.
         </mat-error>
