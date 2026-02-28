@@ -21,6 +21,6 @@ export class Utility {
     }
 
     getHostUrl(): string {
-        return 'https://api-sistema-ecuaciones-production-3ffb.up.railway.app';
+        return 'https://gestor-balance-dialisis-production.up.railway.app';
     }
 }
