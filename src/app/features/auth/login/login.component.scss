@@ -80,6 +80,14 @@ form {
 	color: white!important;
 }
 
+mat-checkbox{
+	div{
+		label.mdc-label{
+			color: white!important;
+		}
+	}
+}
+
 .recover-link {
 	margin-top: 0.25rem;
 	width: 100%;

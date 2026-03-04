@@ -18,6 +18,7 @@ export class PatientService {
   }
 
   updatePatient(patientId: string, payload: PatientRequest) {
+    payload.password = payload.password ? payload.password : "N/A";
     return this.http.patch<PatientResponse>(`${this.API}/${patientId}`, payload);
   }
 
@@ -27,5 +28,9 @@ export class PatientService {
 
   deletePatient(patientId: string) {
     return this.http.delete<void>(`${this.API}/${patientId}`);
+  }
+
+  getPatientById(patientId: string) {
+    return this.http.get<PatientResponse>(`${this.API}/${patientId}`);
   }
 }
