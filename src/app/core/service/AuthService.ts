@@ -15,7 +15,7 @@ export class AuthService {
     this.API = `${this.utility.getHostUrl()}/api/auth`;
   }
 
-  login(data: { username: string; password: string },timeZone: string) {
+  login(data: { username: string; password: string; role: 'ADMIN' | 'PATIENT' },timeZone: string) {
     return this.http.post<any>(`${this.API}/login`, { ...data, timeZone });
   }
 

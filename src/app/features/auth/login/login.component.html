@@ -23,6 +23,10 @@
         </mat-error>
       </mat-form-field>
 
+      <mat-checkbox formControlName="isPatient" class="input-label">
+        Ingresar como paciente
+      </mat-checkbox>
+
       <div class="actions">
         <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Entrar</button>
         <button mat-button type="button" (click)="register()">Crear cuenta</button>

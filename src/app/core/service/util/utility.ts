@@ -21,6 +21,32 @@ export class Utility {
     }
 
     getHostUrl(): string {
-        return 'https://api-sistema-ecuaciones-production-3ffb.up.railway.app';
+        return 'https://gestor-balance-dialisis-production.up.railway.app';
+    }
+
+    getUserIdFromToken(token: string | null | undefined): number | null {
+        if (!token) {
+            return null;
+        }
+        try {
+            const decoded = this.decodeToken(token);
+            const candidate = Number(decoded?.userId ?? decoded?.id ?? decoded?.sub);
+            return Number.isFinite(candidate) ? candidate : null;
+        } catch {
+            return null;
+        }
+    }
+
+    getUserRoleFromToken(token: string | null | undefined): 'ADMIN' | 'PATIENT' | null {
+        if (!token) {
+            return null;
+        }
+        try {
+            const decoded = this.decodeToken(token);
+            const role = decoded?.rol ?? decoded?.role ?? null;
+            return role === 'ADMIN' || role === 'PATIENT' ? role : null;
+        } catch {
+            return null;
+        }
     }
 }

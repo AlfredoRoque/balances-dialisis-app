@@ -6,7 +6,7 @@
       <p class="subtitle">Monitorea el estado de las sesiones y gestiona tu cohorte activa.</p>
     </div>
     <div class="header-actions">
-      <app-update-password-button></app-update-password-button>
+      <app-update-password-button *ngIf="!isPatientRole"></app-update-password-button>
       <app-logout-button></app-logout-button>
     </div>
   </header>
@@ -66,6 +66,29 @@
           </td>
         </ng-container>
 
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Correo</th>
+          <td mat-cell *matCellDef="let patient">
+            <ng-container *ngIf="isEditing(patient.id); else emailView">
+              <div class="inline-edit" [formGroup]="rowForms[patient.id]">
+                <mat-form-field appearance="outline" class="inline-field">
+                  <mat-label>Correo electrónico</mat-label>
+                  <input matInput type="email" formControlName="email" placeholder="correo@dominio.com">
+                  <mat-error *ngIf="rowForms[patient.id]?.get('email')?.hasError('required') && rowForms[patient.id]?.get('email')?.touched">
+                    El correo es obligatorio.
+                  </mat-error>
+                  <mat-error *ngIf="rowForms[patient.id]?.get('email')?.hasError('email') && rowForms[patient.id]?.get('email')?.touched">
+                    Ingresa un correo válido.
+                  </mat-error>
+                </mat-form-field>
+              </div>
+            </ng-container>
+            <ng-template #emailView>
+              {{ patient.email || 'Sin correo' }}
+            </ng-template>
+          </td>
+        </ng-container>
+
         <ng-container matColumnDef="bagType">
           <th mat-header-cell *matHeaderCellDef>Tipo de bolsa</th>
           <td mat-cell *matCellDef="let patient">
@@ -94,6 +117,16 @@
           <th mat-header-cell *matHeaderCellDef class="actions-header">Acciones</th>
           <td mat-cell *matCellDef="let patient" class="actions-cell">
             <ng-container *ngIf="isEditing(patient.id); else defaultActions">
+              <div class="inline-edit password-inline" [formGroup]="rowForms[patient.id]">
+                <mat-form-field appearance="outline" class="inline-field">
+                  <mat-label>Contraseña temporal</mat-label>
+                  <input matInput type="password" formControlName="password" placeholder="••••••">
+                  <mat-hint align="start">Déjalo en blanco para mantener la actual.</mat-hint>
+                  <mat-error *ngIf="rowForms[patient.id]?.get('password')?.hasError('minlength') && rowForms[patient.id]?.get('password')?.touched">
+                    Debe tener al menos 4 caracteres.
+                  </mat-error>
+                </mat-form-field>
+              </div>
               <button mat-icon-button color="primary" aria-label="Guardar cambios" (click)="savePatient(patient)" [disabled]="savingPatientId === patient.id">
                 <mat-icon>check</mat-icon>
               </button>
@@ -150,6 +183,28 @@
           </mat-select>
           <mat-error *ngIf="newPatientForm.get('bagTypeId')?.invalid && newPatientForm.get('bagTypeId')?.touched">
             Selecciona un tipo de bolsa.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label class="input-label">Correo electrónico</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="Ej. paciente@clinica.com" class="input-content">
+          <mat-error *ngIf="newPatientForm.get('email')?.hasError('required') && newPatientForm.get('email')?.touched">
+            El correo es obligatorio.
+          </mat-error>
+          <mat-error *ngIf="newPatientForm.get('email')?.hasError('email') && newPatientForm.get('email')?.touched">
+            Ingresa un correo válido.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label class="input-label">Contraseña temporal</mat-label>
+          <input matInput type="password" formControlName="password" placeholder="••••••" class="input-content">
+          <mat-error *ngIf="newPatientForm.get('password')?.hasError('required') && newPatientForm.get('password')?.touched">
+            La contraseña es obligatoria.
+          </mat-error>
+          <mat-error *ngIf="newPatientForm.get('password')?.hasError('minlength') && newPatientForm.get('password')?.touched">
+            Debe tener al menos 4 caracteres.
           </mat-error>
         </mat-form-field>
 

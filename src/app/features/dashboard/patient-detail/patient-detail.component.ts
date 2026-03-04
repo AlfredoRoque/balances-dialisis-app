@@ -19,12 +19,15 @@ import { finalize, Subject, takeUntil } from 'rxjs';
 import { FluidBalance } from '../../../shared/models/FluidBalance';
 import { FluidBalanceService } from '../../../core/service/FluidBalanceService';
 import { FluidDateService } from "../../../core/service/FluidDateService";
+import { PatientService } from "../../../core/service/patientService";
 import { ExtraFluidPanelComponent } from "./extra-fluid-panel/extra-fluid-panel.component";
 import { VitalSignDetailPanelComponent } from "./vital-sign-detail-panel/vital-sign-detail-panel.component";
 import { MedicineDetailPanelComponent } from "./medicine-detail-panel/medicine-detail-panel.component";
 import { LogoutButtonComponent } from '../../../shared/components/logout-button/logout-button.component';
 import { UpdatePasswordButtonComponent } from '../../../shared/components/update-password-button/update-password-button.component';
 import { SnackbarService } from "../../../core/service/component/snackbar.service";
+import { AuthService } from "../../../core/service/AuthService";
+import { Utility } from "../../../core/service/util/utility";
 
 interface FluidBalanceRecord extends FluidBalance {
   id?: number;
@@ -86,6 +89,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
   activeSlots: ActiveSlot[] = [];
   private activeTimeStrings: string[] = [];
   readonly today = this.buildToday();
+  isPatientRole = false;
 
   private destroy$ = new Subject<void>();
 
@@ -97,7 +101,10 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
     private readonly router: Router,
     private readonly snackBar: SnackbarService,
     private readonly fluidBalanceService: FluidBalanceService,
-    private readonly fluidDateService: FluidDateService
+    private readonly fluidDateService: FluidDateService,
+    private readonly patientService: PatientService,
+    private readonly authService: AuthService,
+    private readonly utility: Utility
   ) {
     this.filterForm = this.fb.group({
       startDate: [null, Validators.required],
@@ -143,8 +150,27 @@ export class PatientDetailComponent implements OnInit, AfterViewInit, OnDestroy 
       if (resolvedLabel) {
         this.patientLabel = resolvedLabel;
       }
+      this.resolvePatientLabelForRole();
       this.loadActiveDates();
       this.loadBalances();
+    });
+  }
+  private resolvePatientLabelForRole(): void {
+    const token = this.authService.getToken();
+    const role = this.utility.getUserRoleFromToken(token);
+    this.isPatientRole = role === 'PATIENT';
+
+    if (!this.isPatientRole || !this.patientId) {
+      return;
+    }
+
+    this.patientService.getPatientById(String(this.patientId)).subscribe({
+      next: (patient) => {
+        this.patientLabel = patient?.name ?? this.patientLabel;
+      },
+      error: () => {
+        this.openSnack('No pudimos obtener la información del paciente.', false);
+      }
     });
   }
 

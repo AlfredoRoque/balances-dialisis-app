@@ -8,8 +8,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { JSEncrypt } from 'jsencrypt';
 import { switchMap, throwError } from 'rxjs';
+import { Utility } from "../../../core/service/util/utility";
 
 @Component({
   selector: 'app-login',
@@ -20,7 +22,8 @@ import { switchMap, throwError } from 'rxjs';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
+    MatButtonModule,
+    MatCheckboxModule
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
@@ -33,11 +36,13 @@ export class LoginComponent {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private snackBar: SnackbarService
+    private snackBar: SnackbarService,
+    private utility: Utility
   ) {
     this.form = this.fb.group({
       username: ['', Validators.required],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
+      isPatient: [false]
     });
   }
 
@@ -48,7 +53,8 @@ export class LoginComponent {
     }
 
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const { username, password } = this.form.value;
+    const { username, password, isPatient } = this.form.value;
+    const role = isPatient ? 'PATIENT' : 'ADMIN';
     this.authService.getPublicKey().pipe(
       switchMap(publicKey => {
         const encryptor = new JSEncrypt();
@@ -59,13 +65,13 @@ export class LoginComponent {
           this.snackBar.openError('No pudimos proteger la contraseña.');
           return throwError(() => new Error('Password encryption failed'));
         }
-        return this.authService.login({ username, password: encryptedPassword }, timeZone);
+        return this.authService.login({ username, password: encryptedPassword, role }, timeZone);
       })
     ).subscribe({
       next: (res) => {
         this.authService.handleLogin(res.token);
-        this.router.navigate(['/dashboard']);
-         this.snackBar.openSuccess('Inicio de sesión exitoso');
+        this.redirectAfterLogin(res.token);
+        this.snackBar.openSuccess('Inicio de sesión exitoso');
       },
       error: (error) => {
         console.log('Login error:', error); 
@@ -73,6 +79,18 @@ export class LoginComponent {
         this.snackBar.openError(message);
       }
     });
+  }
+
+  private redirectAfterLogin(token: string): void {
+    const role = this.utility.getUserRoleFromToken(token);
+    if (role === 'PATIENT') {
+      const userId = this.utility.getUserIdFromToken(token);
+      if (userId) {
+        this.router.navigate(['/dashboard', 'patient', userId]);
+        return;
+      }
+    }
+    this.router.navigate(['/dashboard']);
   }
 
   register() {

@@ -7,11 +7,11 @@
         <p class="subtitle">Consulta, registra y administra los balances de fluidos.</p>
       </div>
       <div class="header-actions">
-        <button mat-stroked-button color="accent" type="button" (click)="goBack()">
+        <button *ngIf="!isPatientRole" mat-stroked-button color="accent" type="button" (click)="goBack()">
           <mat-icon>arrow_back</mat-icon>
           Volver al dashboard
         </button>
-        <app-update-password-button></app-update-password-button>
+        <app-update-password-button *ngIf="!isPatientRole"></app-update-password-button>
         <app-logout-button></app-logout-button>
       </div>
     </header>

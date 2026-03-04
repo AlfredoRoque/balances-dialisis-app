@@ -7,4 +7,5 @@ export interface PatientResponse {
   userId: number;
   bagType: BagType;
   status: 'Estable' | 'Requiere atención' | 'Nuevo ingreso';
+  email?: string;
 }

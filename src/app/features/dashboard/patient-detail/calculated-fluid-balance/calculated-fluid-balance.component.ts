@@ -15,6 +15,8 @@ import { LogoutButtonComponent } from '../../../../shared/components/logout-butt
 import { UpdatePasswordButtonComponent } from '../../../../shared/components/update-password-button/update-password-button.component';
 import { Subject, combineLatest, finalize, takeUntil } from 'rxjs';
 import { SnackbarService } from "../../../../core/service/component/snackbar.service";
+import { AuthService } from "../../../../core/service/AuthService";
+import { Utility } from "../../../../core/service/util/utility";
 
 @Component({
   selector: 'app-calculated-fluid-balance',
@@ -48,6 +50,7 @@ export class CalculatedFluidBalanceComponent implements OnInit, OnDestroy {
   loading = false;
   downloading = false;
   emailing = false;
+  isPatientRole = false;
 
   private destroy$ = new Subject<void>();
 
@@ -55,8 +58,13 @@ export class CalculatedFluidBalanceComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly calculatedService: CalculatedFluidBalanceService,
-    private readonly snackBar: SnackbarService
-  ) {}
+    private readonly snackBar: SnackbarService,
+    private readonly authService: AuthService,
+    private readonly utility: Utility
+  ) {
+    const token = this.authService.getToken();
+    this.isPatientRole = this.utility.getUserRoleFromToken(token) === 'PATIENT';
+  }
 
   ngOnInit(): void {
     combineLatest([this.route.paramMap, this.route.queryParamMap])

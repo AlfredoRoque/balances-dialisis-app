@@ -10,6 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
+import { switchMap, throwError } from 'rxjs';
 import { AuthService } from "../../../core/service/AuthService";
 import { PatientService } from "../../../core/service/patientService";
 import { Utility } from "../../../core/service/util/utility";
@@ -23,6 +24,7 @@ import { SnackbarService } from "../../../core/service/component/snackbar.servic
 import { Router } from "@angular/router";
 import { LogoutButtonComponent } from '../../../shared/components/logout-button/logout-button.component';
 import { UpdatePasswordButtonComponent } from '../../../shared/components/update-password-button/update-password-button.component';
+import { JSEncrypt } from 'jsencrypt';
 
 @Component({
   selector: 'app-dashboard',
@@ -47,7 +49,7 @@ import { UpdatePasswordButtonComponent } from '../../../shared/components/update
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements AfterViewInit {
-  displayedColumns = ['patient', 'age', 'bagType', 'actions'];
+  displayedColumns = ['patient', 'email', 'age', 'bagType', 'actions'];
 
   patients: PatientResponse[] = [];
   dataSource = new MatTableDataSource<PatientResponse>([]);
@@ -56,6 +58,7 @@ export class DashboardComponent implements AfterViewInit {
   newPatientForm: FormGroup;
   creatingPatient = false;
   currentUserId: number | null = null;
+  isPatientRole = false;
 
   rowForms: Record<string, FormGroup> = {};
   editingPatientId: string | null = null;
@@ -76,11 +79,14 @@ export class DashboardComponent implements AfterViewInit {
     this.newPatientForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(80)]],
       age: [null, [Validators.required, Validators.min(0), Validators.max(120)]],
-      bagTypeId: [null, [Validators.required]]
+      bagTypeId: [null, [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(100)]]
     });
 
     const token = this.authService.getToken();
     if (token) {
+      this.isPatientRole = this.utility.getUserRoleFromToken(token) === 'PATIENT';
       this.decodedToken = this.utility.decodeToken(token);
       const derivedUserId = Number(this.decodedToken?.userId ?? this.decodedToken?.id ?? this.decodedToken?.sub);
       this.currentUserId = Number.isFinite(derivedUserId) ? derivedUserId : null;
@@ -110,7 +116,9 @@ export class DashboardComponent implements AfterViewInit {
       form.patchValue({
         name: patient.name,
         age: patient.age,
-        bagTypeId: patient.bagType?.id ?? null
+        bagTypeId: patient.bagType?.id ?? null,
+        email: patient.email ?? '',
+        password: ''
       });
     }
     this.editingPatientId = null;
@@ -123,23 +131,45 @@ export class DashboardComponent implements AfterViewInit {
       return;
     }
 
-    const { name, age, bagTypeId } = form.value;
+    const { name, age, bagTypeId, email, password } = form.value;
     if (bagTypeId == null || bagTypeId === '') {
       form.get('bagTypeId')?.setErrors({ required: true });
       form.get('bagTypeId')?.markAsTouched();
       return;
     }
     const normalizedBagTypeId = Number(bagTypeId);
-    const payload: PatientRequest = {
+    const trimmedEmail = (email as string)?.trim();
+    const requiresPasswordUpdate = !!(password && (password as string).trim());
+
+    const buildPayload = (encryptedPassword?: string): PatientRequest => ({
       name,
       age,
       userId: patient.userId,
       bagTypeId: normalizedBagTypeId,
-      status: patient.status
-    };
+      status: patient.status,
+      email: trimmedEmail,
+      ...(encryptedPassword ? { password: encryptedPassword } : {})
+    });
 
     this.savingPatientId = patient.id;
-    this.patientService.updatePatient(patient.id, payload)
+    const update$ = requiresPasswordUpdate
+      ? this.authService.getPublicKey().pipe(
+          switchMap(publicKey => {
+            const encryptor = new JSEncrypt();
+            encryptor.setPublicKey(publicKey.toString());
+            const encryptedPassword = encryptor.encrypt(password ?? '');
+
+            if (!encryptedPassword) {
+              this.snackBar.openError('No pudimos proteger la contraseña del paciente.');
+              return throwError(() => new Error('patient-password-encryption-failed'));
+            }
+
+            return this.patientService.updatePatient(patient.id, buildPayload(encryptedPassword));
+          })
+        )
+      : this.patientService.updatePatient(patient.id, buildPayload());
+
+    update$
       .pipe(finalize(() => this.savingPatientId = null))
       .subscribe({
         next: (updated) => {
@@ -147,15 +177,22 @@ export class DashboardComponent implements AfterViewInit {
             || this.bagTypes.find(b => b.id === normalizedBagTypeId)
             || patient.bagType
             || { id: normalizedBagTypeId, type: 'Sin asignar', description: '' };
-          this.applyPatientUpdate(updated ?? { ...patient, name, age, bagType: resolvedBagType });
+          const merged = updated ?? { ...patient, name, age, bagType: resolvedBagType, email: trimmedEmail };
+          this.applyPatientUpdate({ ...merged, bagType: resolvedBagType });
+          form.get('password')?.reset('');
           this.editingPatientId = null;
           this.snackBar.openSuccess('Paciente actualizado exitosamente');
         },
-        error: () => {
+        error: (error) => {
+          if (error?.message === 'patient-password-encryption-failed') {
+            return;
+          }
           form.patchValue({
             name: patient.name,
             age: patient.age,
-            bagTypeId: patient.bagType?.id ?? null
+            bagTypeId: patient.bagType?.id ?? null,
+            email: patient.email ?? '',
+            password: ''
           });
           this.snackBar.openError('No fue posible actualizar el paciente. Por favor, inténtalo de nuevo.');
         }
@@ -241,14 +278,18 @@ export class DashboardComponent implements AfterViewInit {
       existing.setValue({
         name: patient.name,
         age: patient.age,
-        bagTypeId: patient.bagType?.id ?? null
+        bagTypeId: patient.bagType?.id ?? null,
+        email: patient.email ?? '',
+        password: ''
       }, { emitEvent: false });
       return;
     }
     this.rowForms[patient.id] = this.fb.group({
       name: [patient.name, [Validators.required, Validators.maxLength(80)]],
       age: [patient.age, [Validators.required, Validators.min(0), Validators.max(120)]],
-      bagTypeId: [patient.bagType?.id ?? null, [Validators.required]]
+      bagTypeId: [patient.bagType?.id ?? null, [Validators.required]],
+      email: [patient.email ?? '', [Validators.required, Validators.email]],
+      password: ['', [Validators.minLength(4), Validators.maxLength(100)]]
     });
   }
 
@@ -284,36 +325,56 @@ export class DashboardComponent implements AfterViewInit {
       return;
     }
 
-    const { name, age, bagTypeId } = this.newPatientForm.value;
+    const { name, age, bagTypeId, email, password } = this.newPatientForm.value;
     const normalizedBagTypeId = Number(bagTypeId);
 
-    const payload: PatientRequest = {
-      name,
-      age,
-      bagTypeId: normalizedBagTypeId,
-      userId: this.currentUserId,
-      status: null
-    };
-
     this.creatingPatient = true;
-    this.patientService.createPatient(payload)
-      .pipe(finalize(() => this.creatingPatient = false))
-      .subscribe({
-        next: (created) => {
-          this.patients = [created, ...this.patients];
-          this.refreshTable(true);
-          this.newPatientForm.reset({
-            name: '',
-            age: null,
-            bagTypeId: this.bagTypes[0]?.id ?? null
-          });
-          this.snackBar.openSuccess('Paciente creado exitosamente');
-        },
-        error: (error) => {
-          console.error('Error al crear paciente:', error);
-          this.snackBar.openError('No fue posible crear el paciente. Por favor, inténtalo de nuevo.');
+    this.authService.getPublicKey().pipe(
+      switchMap(publicKey => {
+        const encryptor = new JSEncrypt();
+        encryptor.setPublicKey(publicKey.toString());
+        const encryptedPassword = encryptor.encrypt(password ?? '');
+
+        if (!encryptedPassword) {
+          this.snackBar.openError('No pudimos proteger la contraseña del paciente.');
+          return throwError(() => new Error('patient-password-encryption-failed'));
         }
-      });
+
+        const payload: PatientRequest = {
+          name,
+          age,
+          bagTypeId: normalizedBagTypeId,
+          userId: this.currentUserId as number,
+          status: null,
+          email: (email as string)?.trim(),
+          password: encryptedPassword
+        };
+
+        return this.patientService.createPatient(payload);
+      }),
+      finalize(() => this.creatingPatient = false)
+    ).subscribe({
+      next: (created) => {
+        this.patients = [created, ...this.patients];
+        this.refreshTable(true);
+        this.newPatientForm.reset({
+          name: '',
+          age: null,
+          bagTypeId: this.bagTypes[0]?.id ?? null,
+          email: '',
+          password: ''
+        });
+        this.ensureDefaultBagTypeSelection();
+        this.snackBar.openSuccess('Paciente creado exitosamente');
+      },
+      error: (error) => {
+        if (error?.message === 'patient-password-encryption-failed') {
+          return;
+        }
+        console.error('Error al crear paciente:', error);
+        this.snackBar.openError('No fue posible crear el paciente. Por favor, inténtalo de nuevo.');
+      }
+    });
   }
 
   private ensureDefaultBagTypeSelection(): void {

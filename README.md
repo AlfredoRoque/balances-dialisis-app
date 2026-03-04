@@ -19,7 +19,7 @@ Aplicación web en Angular para gestionar balances de fluidos, signos vitales y 
 - RxJS para composición de flujos asíncronos
 - SCSS con gradientes y blur para la identidad visual
 - JSEncrypt para cifrar credenciales antes de llegar al backend
-- Servicios REST expuestos por el backend en `https://api-sistema-ecuaciones-production-3ffb.up.railway.app`
+- Servicios REST expuestos por el backend en `https://gestor-balance-dialisis-production.up.railway.app`
 
 ## Características principales
 - **Autenticación segura:** login con cifrado asimétrico, expiración por inactividad y cierre de sesión global.
@@ -67,7 +67,7 @@ flowchart TD
 ## Requisitos previos
 - Node.js 18 LTS o superior
 - npm 9+
-- Backend disponible en `https://api-sistema-ecuaciones-production-3ffb.up.railway.app` (o ajustar servicios)
+- Backend disponible en `https://gestor-balance-dialisis-production.up.railway.app` (o ajustar servicios)
 
 ## Configuración
 1. Instala dependencias
@@ -90,7 +90,7 @@ flowchart TD
 | `npm run lint`   | (Configurable) Ejecuta linters cuando se añadan. |
 
 ## Variables y endpoints
-- Todos los servicios usan rutas absolutas (`https://api-sistema-ecuaciones-production-3ffb.up.railway.app`). Ajusta estas URLs dentro de `src/app/core/service/*.ts` si necesitas apuntar a otro host.
+- Todos los servicios usan rutas absolutas (`https://gestor-balance-dialisis-production.up.railway.app`). Ajusta estas URLs dentro de `src/app/core/service/*.ts` si necesitas apuntar a otro host.
 - El JWT se almacena en `localStorage` bajo la llave `token`. `Utility.decodeToken` se encarga de leer `userId` para asociar datos al médico autenticado.
 
 ## Estructura del proyecto

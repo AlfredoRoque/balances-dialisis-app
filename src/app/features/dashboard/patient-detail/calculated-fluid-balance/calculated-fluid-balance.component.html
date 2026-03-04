@@ -1,7 +1,7 @@
 <section class="calculated-shell">
   <mat-card class="calculated-card">
     <div class="card-toolbar">
-      <app-update-password-button></app-update-password-button>
+      <app-update-password-button *ngIf="!isPatientRole"></app-update-password-button>
       <app-logout-button></app-logout-button>
     </div>
     <header class="card-head">
