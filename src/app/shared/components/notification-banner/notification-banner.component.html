@@ -1,0 +1,4 @@
+<div class="notification-banner" *ngIf="visible">
+  <span class="notification-message">{{ message }}</span>
+  <button class="notification-close" (click)="dismiss()" aria-label="Cerrar notificación">✕</button>
+</div>

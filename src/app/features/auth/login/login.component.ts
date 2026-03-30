@@ -12,6 +12,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { JSEncrypt } from 'jsencrypt';
 import { switchMap, throwError } from 'rxjs';
 import { Utility } from "../../../core/service/util/utility";
+import { SubscriptionService } from "../../../core/service/SubscriptionService";
+import { NotificationService } from "../../../core/service/NotificationService";
 
 @Component({
   selector: 'app-login',
@@ -37,7 +39,9 @@ export class LoginComponent {
     private authService: AuthService,
     private router: Router,
     private snackBar: SnackbarService,
-    private utility: Utility
+    private utility: Utility,
+    private subscriptionService: SubscriptionService,
+    private notificationService: NotificationService
   ) {
     this.form = this.fb.group({
       username: ['', Validators.required],
@@ -70,6 +74,8 @@ export class LoginComponent {
     ).subscribe({
       next: (res) => {
         this.authService.handleLogin(res.token);
+        this.subscriptionService.refreshPlanName();
+        this.notificationService.triggerLoginNotification();
         this.redirectAfterLogin(res.token);
         this.snackBar.openSuccess('Inicio de sesión exitoso');
       },
