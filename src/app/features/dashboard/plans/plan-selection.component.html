@@ -1,0 +1,82 @@
+<section class="plans-shell">
+  <header class="page-hero">
+    <button mat-button color="accent" type="button" class="back-button" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Regresar al panel
+    </button>
+    <p class="eyebrow">Suscripciones</p>
+    <h1>Elige el plan que sostiene tu monitoreo</h1>
+    <p class="subtitle">
+      Cada plan habilita los módulos de seguimiento de balances, reportes y formularios que ya usas a diario.
+      Los pagos se procesan a través de nuestra pasarela segura.
+    </p>
+  </header>
+
+  <article class="state-card" *ngIf="loadingPlans">
+    <mat-progress-spinner color="accent" diameter="56" mode="indeterminate"></mat-progress-spinner>
+    <p>Estamos cargando los planes disponibles...</p>
+  </article>
+
+  <article class="state-card error" *ngIf="!loadingPlans && errorMessage">
+    <mat-icon>warning_amber</mat-icon>
+    <div>
+      <p>{{ errorMessage }}</p>
+      <button mat-stroked-button color="accent" type="button" (click)="fetchPlans()">
+        <mat-icon>refresh</mat-icon>
+        Reintentar
+      </button>
+    </div>
+  </article>
+
+  <article class="state-card" *ngIf="!loadingPlans && !errorMessage && !plans.length">
+    <mat-icon>info</mat-icon>
+    <p>No encontramos planes activos por el momento. Vuelve a intentarlo más tarde.</p>
+  </article>
+
+  <section class="plans-grid" *ngIf="!loadingPlans && !errorMessage && plans.length">
+    <mat-card class="plan-card" *ngFor="let plan of plans; trackBy: trackByPlanId">
+      <header class="plan-card__head">
+        <p class="plan-name">{{ plan.name }}</p>
+        <p class="plan-price">
+          {{ plan.price | currency:'USD':'symbol':'1.0-0' }}
+          <span>/mes</span>
+        </p>
+      </header>
+
+      <p class="plan-description">
+        {{ plan.description || 'Este plan mantiene tu operación clínica sin interrupciones.' }}
+      </p>
+
+      <ng-container *ngIf="plan.details?.length; else defaultFeatures">
+        <ul class="plan-points">
+          <li *ngFor="let detail of plan.details">
+            <mat-icon>{{ detail.icon || 'check_circle' }}</mat-icon>
+            <span>{{ detail.description }}</span>
+          </li>
+        </ul>
+      </ng-container>
+
+      <ng-template #defaultFeatures>
+        <ul class="plan-points">
+          <li>
+            <mat-icon>check_circle</mat-icon>
+            <span>Incluye acceso al panel completo y formularios oficiales.</span>
+          </li>
+        </ul>
+      </ng-template>
+
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="cta-button"
+        (click)="selectPlan(plan)"
+        [disabled]="isProcessing(plan)"
+      >
+        <mat-icon *ngIf="!isProcessing(plan)">paid</mat-icon>
+        <mat-icon *ngIf="isProcessing(plan)">autorenew</mat-icon>
+        <span>{{ isProcessing(plan) ? 'Conectando...' : 'Elegir este plan' }}</span>
+      </button>
+    </mat-card>
+  </section>
+</section>

@@ -1,0 +1,35 @@
+:host {
+	display: block;
+	min-height: 100vh;
+}
+
+.global-admin-tools {
+	position: fixed;
+	top: 1rem;
+	right: 1rem;
+	z-index: 1100;
+	display: flex;
+	gap: 0.75rem;
+	pointer-events: none;
+	transition: top 0.35s ease;
+
+	&.banner-active {
+		top: calc(1rem + 48px);
+	}
+}
+
+.global-admin-tools app-plan-indicator-button,
+.global-admin-tools app-profile-button {
+	pointer-events: auto;
+}
+
+@media (max-width: 599px) {
+	.global-admin-tools {
+		top: 0.75rem;
+		right: 0.75rem;
+
+		&.banner-active {
+			top: calc(0.75rem + 48px);
+		}
+	}
+}

@@ -98,7 +98,7 @@ export class UpdatePasswordComponent {
         this.form.reset();
         this.snackBar.openSuccess('Contraseña actualizada exitosamente. Inicia sesión nuevamente.');
         this.authService.handleLogout();
-        this.router.navigate(['/login']);
+        this.router.navigate(['/profile']);
       },
       error: (error) => {
         const message = error?.error?.message || 'No pudimos actualizar la contraseña.';
@@ -108,7 +108,7 @@ export class UpdatePasswordComponent {
   }
 
   goBack(): void {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/profile']);
   }
 
   private ensureUserId(): number | null {

@@ -4,6 +4,7 @@ import { Router } from "@angular/router";
 import { SessionTimerService } from "./session-timer.service";
 import { Observable, finalize } from 'rxjs';
 import { Utility } from "./util/utility";
+import { NotificationService } from "./NotificationService";
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -11,7 +12,7 @@ export class AuthService {
   private API = '';
   private sessionExpiredNotified = false;
 
-  constructor(private http: HttpClient,private router: Router,private sessionTimer: SessionTimerService,private utility: Utility) {
+  constructor(private http: HttpClient,private router: Router,private sessionTimer: SessionTimerService,private utility: Utility,private notificationService: NotificationService) {
     this.API = `${this.utility.getHostUrl()}/api/auth`;
   }
 
@@ -118,6 +119,7 @@ export class AuthService {
     this.sessionExpiredNotified = false;
     localStorage.removeItem('token');
     this.sessionTimer.stop();
+    this.notificationService.setBannerVisible(false);
   }
 
   initSessionFromStorage() {

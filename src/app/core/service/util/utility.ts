@@ -43,10 +43,44 @@ export class Utility {
         }
         try {
             const decoded = this.decodeToken(token);
-            const role = decoded?.rol ?? decoded?.role ?? null;
-            return role === 'ADMIN' || role === 'PATIENT' ? role : null;
+            const roleSource = decoded?.rol ?? decoded?.role ?? decoded?.roles ?? decoded?.authorities ?? null;
+            return this.resolveRole(roleSource);
         } catch {
             return null;
         }
+    }
+
+    private resolveRole(roleValue: unknown): 'ADMIN' | 'PATIENT' | null {
+        const normalize = (value: string): 'ADMIN' | 'PATIENT' | null => {
+            const upper = value.trim().toUpperCase();
+            if (upper.includes('ADMIN')) {
+                return 'ADMIN';
+            }
+            if (upper.includes('PATIENT') || upper.includes('PACIENTE')) {
+                return 'PATIENT';
+            }
+            return null;
+        };
+
+        if (typeof roleValue === 'string') {
+            return normalize(roleValue);
+        }
+
+        if (Array.isArray(roleValue)) {
+            for (const candidate of roleValue) {
+                if (typeof candidate === 'string') {
+                    const match = normalize(candidate);
+                    if (match) {
+                        return match;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public isFreePlan(currentPlan: string | null | undefined): boolean {
+        return (currentPlan ?? '').toUpperCase() === 'FREE';
     }
 }

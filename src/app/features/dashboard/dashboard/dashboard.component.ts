@@ -23,7 +23,6 @@ import { MedicineFormComponent } from "../medicine-form/medicine-form.component"
 import { SnackbarService } from "../../../core/service/component/snackbar.service";
 import { Router } from "@angular/router";
 import { LogoutButtonComponent } from '../../../shared/components/logout-button/logout-button.component';
-import { UpdatePasswordButtonComponent } from '../../../shared/components/update-password-button/update-password-button.component';
 import { JSEncrypt } from 'jsencrypt';
 
 @Component({
@@ -42,8 +41,7 @@ import { JSEncrypt } from 'jsencrypt';
     ReactiveFormsModule,
     VitalSignFormComponent,
     MedicineFormComponent,
-    LogoutButtonComponent,
-    UpdatePasswordButtonComponent
+    LogoutButtonComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -200,7 +198,9 @@ export class DashboardComponent implements AfterViewInit {
   }
 
   deletePatient(patient: PatientResponse): void {
-    this.snackBar.confirm(`¿Seguro que deseas eliminar al paciente "${patient.name}"?`)
+    const trimmedName = patient.name?.trim() || 'este paciente';
+    const warningMessage = `Si eliminas el paciente "${trimmedName}" se eliminarán permanentemente todos sus balances relacionados.`;
+    this.snackBar.confirm(warningMessage)
       .subscribe(confirmed => {
         if (!confirmed) {
           return;
@@ -371,8 +371,7 @@ export class DashboardComponent implements AfterViewInit {
         if (error?.message === 'patient-password-encryption-failed') {
           return;
         }
-        console.error('Error al crear paciente:', error);
-        this.snackBar.openError('No fue posible crear el paciente. Por favor, inténtalo de nuevo.');
+        this.snackBar.openError(error.error?.message ? error.error.message : 'No fue posible crear el paciente. Por favor, inténtalo de nuevo.');
       }
     });
   }

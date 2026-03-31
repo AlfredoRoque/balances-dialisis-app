@@ -39,7 +39,6 @@ export class MedicineFormComponent implements OnInit, AfterViewInit {
 
   form: FormGroup;
   creating = false;
-  submitError: string | null = null;
   loading = false;
 
   displayedColumns = ['name', 'actions'];
@@ -87,7 +86,6 @@ export class MedicineFormComponent implements OnInit, AfterViewInit {
     }
 
     this.creating = true;
-    this.submitError = null;
 
     const payload: Medicine = { name: trimmedName, userId: this.decodedToken?.userId ?? 0 };
 
@@ -100,9 +98,8 @@ export class MedicineFormComponent implements OnInit, AfterViewInit {
           this.form.reset({ name: '' });
           this.snackBar.openSuccess('Medicina registrada exitosamente');
         },
-            error: () => {
-            this.submitError = 'No fue posible registrar la medicina. Intenta nuevamente.';
-            this.snackBar.openError('No fue posible registrar la medicina. Intenta nuevamente.');
+            error: (error) => {
+            this.snackBar.openError(error.error?.message ? error.error.message : 'No fue posible registrar la medicina. Intenta nuevamente.');
         }
       });
   }
@@ -167,7 +164,9 @@ export class MedicineFormComponent implements OnInit, AfterViewInit {
     if (id == null) {
       return;
     }
-    this.snackBar.confirm(`¿Seguro que deseas eliminar la medicina "${medicine.name}"?`)
+    const trimmedName = medicine.name?.trim() || 'esta medicina';
+    const warningMessage = `Si eliminas el medicamento "${trimmedName}" se eliminará permanentemente para todos los pacientes que lo tengan activo.`;
+    this.snackBar.confirm(warningMessage)
       .subscribe(confirmed => {
         if (!confirmed) {
           return;

@@ -1,0 +1,74 @@
+<section class="profile-shell">
+  <mat-card class="profile-card">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Cuenta</p>
+        <h1>Centro de perfil</h1>
+        <p class="subtitle">Administra opciones clave de tu cuenta administrativa.</p>
+      </div>
+      <button mat-stroked-button type="button" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+    </header>
+
+    <nav mat-nav-list class="profile-menu">
+      <button mat-list-item type="button" (click)="navigateToPlans()" [disabled]="isSpecialPlan()">
+        <mat-icon matListIcon>workspace_premium</mat-icon>
+        <div mat-line>Administrar suscripción</div>
+        <p mat-line class="menu-subtitle">
+          {{ isSpecialPlan() ? 'No disponible para tu plan actual.' : 'Consulta tu plan y gestiona pagos.' }}
+        </p>
+        <mat-icon class="chevron" aria-hidden="true">chevron_right</mat-icon>
+      </button>
+
+      <button
+        mat-list-item
+        type="button"
+        (click)="updatePaymentMethod()"
+        [disabled]="updatingPaymentMethod || isSpecialPlan()">
+        <mat-icon matListIcon>credit_card</mat-icon>
+        <div mat-line>Actualizar información de pago</div>
+        <p mat-line class="menu-subtitle">
+          <ng-container *ngIf="!isSpecialPlan(); else specialPayMsg">
+            {{ updatingPaymentMethod ? 'Redirigiendo a la pasarela segura...' : 'Actualiza la tarjeta asociada a tu suscripción.' }}
+          </ng-container>
+          <ng-template #specialPayMsg>No disponible para tu plan actual.</ng-template>
+        </p>
+        <mat-icon class="chevron spinning" aria-hidden="true" *ngIf="updatingPaymentMethod">autorenew</mat-icon>
+        <mat-icon class="chevron" aria-hidden="true" *ngIf="!updatingPaymentMethod">chevron_right</mat-icon>
+      </button>
+
+      <button
+        mat-list-item
+        type="button"
+        (click)="confirmCancelSubscription()"
+        [disabled]="cancellingSubscription || isFreePlan() || isSpecialPlan()">
+        <mat-icon matListIcon>cancel</mat-icon>
+        <div mat-line>Cancelar suscripción</div>
+        <p mat-line class="menu-subtitle">
+          <ng-container *ngIf="isSpecialPlan(); else normalCancelMsg">
+            No disponible para tu plan actual.
+          </ng-container>
+          <ng-template #normalCancelMsg>
+            <ng-container *ngIf="!isFreePlan(); else freePlanMsg">
+              {{ cancellingSubscription ? 'Procesando cancelación...' : 'Se hará efectiva al terminar el periodo vigente.' }}
+            </ng-container>
+            <ng-template #freePlanMsg>
+              Ya estás en el plan gratuito.
+            </ng-template>
+          </ng-template>
+        </p>
+        <mat-icon class="chevron" aria-hidden="true" *ngIf="!cancellingSubscription">chevron_right</mat-icon>
+        <mat-icon class="chevron spinning" aria-hidden="true" *ngIf="cancellingSubscription">autorenew</mat-icon>
+      </button>
+
+      <button mat-list-item type="button" (click)="navigateToUpdatePassword()">
+        <mat-icon matListIcon>lock_reset</mat-icon>
+        <div mat-line>Actualizar contraseña</div>
+        <p mat-line class="menu-subtitle">Se cerrará la sesión al actualizar la contraseña.</p>
+        <mat-icon class="chevron" aria-hidden="true">chevron_right</mat-icon>
+      </button>
+    </nav>
+  </mat-card>
+</section>

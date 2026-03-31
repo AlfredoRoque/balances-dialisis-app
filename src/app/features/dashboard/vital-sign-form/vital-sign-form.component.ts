@@ -39,7 +39,6 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
 
   form: FormGroup;
   creating = false;
-  submitError: string | null = null;
   loading = false;
 
   displayedColumns = ['name', 'actions'];
@@ -87,7 +86,6 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
     }
 
     this.creating = true;
-    this.submitError = null;
 
     const payload: VitalSign = { name: trimmedName, userId: this.decodedToken?.userId ?? 0 };
 
@@ -100,9 +98,8 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
           this.form.reset({ name: '' });
           this.snackBar.openSuccess('Signo vital registrado exitosamente');
         },
-        error: () => {
-          this.submitError = 'No fue posible registrar el signo vital. Intenta nuevamente.';
-          this.snackBar.openError('No fue posible registrar el signo vital. Intenta nuevamente.');
+        error: (error) => {
+          this.snackBar.openError(error.error?.message ? error.error.message : 'No fue posible registrar el signo vital. Intenta nuevamente.');
         }
       });
   }
@@ -167,7 +164,9 @@ export class VitalSignFormComponent implements OnInit, AfterViewInit {
     if (id == null) {
       return;
     }
-    this.snackBar.confirm(`¿Seguro que deseas eliminar el signo vital "${vitalSign.name}"?`)
+    const trimmedName = vitalSign.name?.trim() || 'este signo vital';
+    const warningMessage = `Si eliminas el signo vital "${trimmedName}" se eliminará permanentemente para todos los pacientes que lo tengan activo.`;
+    this.snackBar.confirm(warningMessage)
       .subscribe(confirmed => {
         if (!confirmed) {
           return;
